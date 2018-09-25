@@ -4,13 +4,11 @@ import rastervision as rv
 
 from .data import (get_rio_training_scene_info, get_rio_val_scene_info)
 
-ROOT_URI = "s3://raster-vision-rob-dev/spacenet/cc"
-
 AOI_URI = "s3://spacenet-dataset/AOI_1_Rio/srcData/buildingLabels/Rio_OUTLINE_Public_AOI.geojson"
 
 class ChipClassificationExperiments(rv.ExperimentSet):
     """Chip classificaiton experiments on SpaceNet Rio data.
-    Be sure you've run the 'Spacenet - Data Prep' notebook before running.
+    Be sure you've run the data prep notebook before running this experiment.
     """
     def scene_maker(self, task):
         def f(x):
@@ -61,11 +59,11 @@ class ChipClassificationExperiments(rv.ExperimentSet):
                                                       "lr": 0.0005
                                                   },
                                                   {
-                                                      "epoch": 20,
+                                                      "epoch": 15,
                                                       "lr": 0.0001
                                                   },
                                                   {
-                                                      "epoch": 40,
+                                                      "epoch": 30,
                                                       "lr": 0.00001
                                                   }
                                               ]
@@ -73,54 +71,6 @@ class ChipClassificationExperiments(rv.ExperimentSet):
                                       }
                                   }, set_missing_keys=True) \
                                   .build()
-        # pretrained_model = 'https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5'
-        # backend = rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
-        #                           .with_task(task) \
-        #                           .with_debug(True) \
-        #                           .with_train_options(replace_model=True) \
-        #                           .with_pretrained_model(pretrained_model) \
-        #                           .with_template({
-        #                               "model": {
-        #                                   "input_size": 300,
-        #                                   "type": "RESNET50",
-        #                                   "load_weights_by_name": True,
-        #                                   "model_path": ""
-        #                               },
-        #                               "trainer": {
-        #                                   "optimizer": {
-        #                                       "type": "ADAM",
-        #                                       "init_lr": 0.0001
-        #                                   },
-        #                                   "options": {
-        #                                       "training_data_dir": "",
-        #                                       "validation_data_dir": "",
-        #                                       "nb_epochs": 40,
-        #                                       "batch_size": 32,
-        #                                       "input_size": 300,
-        #                                       "output_dir": "",
-        #                                       "class_names": ["threat", "background"],
-        #                                       "save_best": True,
-        #                                       "lr_schedule": [
-        #                                           {
-        #                                               "epoch": 0,
-        #                                               "lr": 0.0005
-        #                                           },
-        #                                           {
-        #                                               "epoch": 20,
-        #                                               "lr": 0.0001
-        #                                           },
-        #                                           {
-        #                                               "epoch": 40,
-        #                                               "lr": 0.00001
-        #                                           }
-        #                                       ]
-        #                                   }
-        #                               }
-        #                           }) \
-        #                           .with_batch_size(8) \
-        #                           .with_num_epochs(80) \
-        #                           .build()
-
 
         make_scene = self.scene_maker(task)
 

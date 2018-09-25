@@ -90,12 +90,12 @@ You'll need to pass the experiment an S3 URI that you have write access to, that
 If you are running locally (which means you're running this against a GPU machine with a good connection), run:
 
 ```
-> rastervision run local -e spacenet.chip_classification -a rv_root ${RVROOT}
+> rastervision run local -e spacenet.chip_classification -a root_uri ${RVROOT}
 ```
 
 If you are running on AWS Batch, run:
 ```
-> rastervision run aws_batch -e spacenet.chip_classification -a rv_root ${RVROOT}
+> rastervision run aws_batch -e spacenet.chip_classification -a root_uri ${RVROOT}
 ```
 
 where `${RVROOT}` is your RV root, for instance `s3://raster-vision-rob-dev/spacenet/cc`
