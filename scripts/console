@@ -1,0 +1,33 @@
+#!/bin/bash
+
+set -e
+
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ] ; do SOURCE="$(readlink "$SOURCE")"; done
+SCRIPTS_DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+PROJECT_ROOT="$( cd -P "$( dirname "$SCRIPTS_DIR" )" && pwd )"
+SRC="${PROJECT_ROOT}"
+
+function usage() {
+    echo -n \
+         "Usage: $(basename "$0")
+Run console of docker image locally.
+All arguments are passed to 'docker run'.
+"
+}
+
+IMAGE="raster-vision-examples-cpu"
+
+if [ "${BASH_SOURCE[0]}" = "${0}" ]
+then
+    AWS="-e AWS_PROFILE=${AWS_PROFILE:-default} -v ${HOME}/.aws:/root/.aws:ro"
+    TENSORBOARD="-p 6006:6006"
+    RV_CONFIG="-v ${HOME}/.rastervision:/root/.rastervision:ro"
+
+    docker run ${RUNTIME} ${NAME} --rm -it ${TENSORBOARD} ${AWS} ${RV_CONFIG} \
+           -v "$SRC"/spacenet:/opt/src/spacenet \
+           -v "$SRC"/notebooks:/opt/notebooks \
+           -v /Users/rob/proj/az/raster-vision-2/src/rastervision:/opt/src/rastervision \
+           -v "$SRC"/data:/opt/data \
+           ${IMAGE} "${@:1}"
+fi
