@@ -106,6 +106,10 @@ If you are running on AWS Batch, run:
 
 where `${RVROOT}` is your RV root, for instance `s3://raster-vision-rob-dev/spacenet/cc`
 
+Your console output should look something like this if you are running against AWS:
+
+![Spacenet Chip Classification Console Output](img/spacenet-cc-console-output.png)
+
 ### Step 3: Inspect Evaluation results
 
 After everything completes, which should take about 3 hours if you're running on AWS with p3.2xlarges,
