@@ -79,6 +79,8 @@ Run jupyter and navigate to the `spacenet/SpaceNet - Rio - Chip Classification D
 
 Run through this notebook (instructions are included).
 
+![Jupyter Notebook](img/jupyter-spacenet-cc.png)
+
 ### Step 2: Run Raster Vision
 
 The experiment we want to run is in `spacenet/chip_classification.py`.
