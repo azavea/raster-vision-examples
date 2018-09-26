@@ -52,7 +52,7 @@ This mounts many of the same directories as `scripts/consle`. The terminal outpu
 ### Running against AWS
 
 If you want to run code against AWS, you'll have to have a Raster Vision AWS Batch setup
-on your account, which you can accomplish through the [Raster Vision AWS repo](https://github.com/azavea/raster-vision-aws).
+on your account, which you can accomplish through the [Raster Vision AWS repository](https://github.com/azavea/raster-vision-aws).
 
 Make sure to set the appropriate configuration in your `$HOME/.rastervision/default` configuration, e.g.
 
@@ -61,6 +61,10 @@ Make sure to set the appropriate configuration in your `$HOME/.rastervision/defa
 job_queue=raster-vision-gpu
 job_definition=raster-vision-gpu-newapi
 ```
+
+### QGIS Plugin
+
+We can inspect results quickly by installing the [QGIS plugin](https://github.com/azavea/raster-vision-aws). This is an optional step, and requires QGIS 3. See that repository's README for more installation instructions.
 
 ## Spacenet Building Chip Classification
 
@@ -99,3 +103,54 @@ If you are running on AWS Batch, run:
 ```
 
 where `${RVROOT}` is your RV root, for instance `s3://raster-vision-rob-dev/spacenet/cc`
+
+### Step 3: Inspect Evaluation results
+
+After everything completes, which should take about 3 hours if you're running on AWS with p3.2xlarges,
+you should be able to find the `eval/spacenet-rio-chip-classification/eval.json` evaluation
+JSON. This is an example of the scores from a run:
+
+```javascript
+[
+    {
+        "gt_count": 1460.0,
+        "count_error": 0.0,
+        "f1": 0.962031922725018,
+        "class_name": "building",
+        "recall": 0.9527397260273971,
+        "precision": 0.9716098420590342,
+        "class_id": 1
+    },
+    {
+        "gt_count": 2314.0,
+        "count_error": 0.0,
+        "f1": 0.9763865660344931,
+        "class_name": "no_building",
+        "recall": 0.9822817631806394,
+        "precision": 0.9706292067263268,
+        "class_id": 2
+    },
+    {
+        "gt_count": 3774.0,
+        "count_error": 0.0,
+        "f1": 0.970833365390128,
+        "class_name": "average",
+        "recall": 0.9708532061473236,
+        "precision": 0.9710085728062825,
+        "class_id": -1
+    }
+]
+```
+
+Which shows us an f1 score of `0.96` for detecting chips with buildings, and an average f1 of `0.97`.
+
+### Step 4: View results through QGIS plugin
+
+Those numbers look good, but seeing the imagery and predictions on a map will look better.
+To do this, we utilize the QGIS plugin to pull down one of the validation images.
+
+A walkthrough of using QGIS to inspect these results can be found [in the QGIS plugin README](https://github.com/raster-vision-qgis#loading-results-tutorial
+
+Viewing the validation scene results for scene ID `013022232023` looks like this:
+
+![QGIS results explorer](img/qgis-spacenet-cc.png)
