@@ -151,7 +151,7 @@ Which shows us an f1 score of `0.96` for detecting chips with buildings, and an 
 Those numbers look good, but seeing the imagery and predictions on a map will look better.
 To do this, we utilize the QGIS plugin to pull down one of the validation images.
 
-A walkthrough of using QGIS to inspect these results can be found [in the QGIS plugin README](https://github.com/raster-vision-qgis#loading-results-tutorial
+A walkthrough of using QGIS to inspect these results can be found [in the QGIS plugin README](https://github.com/raster-vision-qgis#loading-results-tutorial)
 
 Viewing the validation scene results for scene ID `013022232023` looks like this:
 
