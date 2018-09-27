@@ -262,3 +262,13 @@ After running for around 6 hours on a P3 instance, you should have the following
 ### Step 4: View results through QGIS plugin
 
 TODO
+
+## xView Vehicle Object Detection
+
+This example performs object detection to detect vehicles in the xView imagery.
+
+### Step 1: Download the Data
+
+Sign up for an account for the [DIUx xView Detection Challenge](http://xviewdataset.org/). Navigate to the [downloads page](https://challenge.xviewdataset.org/download-links) and download the zipped training images and labels.
+
+### Step 2: Run the Jupyter Notebook
