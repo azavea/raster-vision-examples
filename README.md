@@ -269,6 +269,18 @@ This example performs object detection to detect vehicles in the xView imagery.
 
 ### Step 1: Download the Data
 
-Sign up for an account for the [DIUx xView Detection Challenge](http://xviewdataset.org/). Navigate to the [downloads page](https://challenge.xviewdataset.org/download-links) and download the zipped training images and labels.
+Sign up for an account for the [DIUx xView Detection Challenge](http://xviewdataset.org/). Navigate to the [downloads page](https://challenge.xviewdataset.org/download-links) and download the zipped training images and labels.  Unzip both of these files and upload their contents to an s3 bucket that you have read/write access to. Once this is done, the bucket should contain a labels geojson called `xView_train.geojson` and a directory called `train_images`. You will use the uri to this dataset as input to the data prep Jupyter Notebook in step 2.
 
 ### Step 2: Run the Jupyter Notebook
+
+You'll need to do some data preprocessing, which we can do in the jupyter notebook supplied.
+
+Run jupyter and navigate to the `xview/xView - Vehicles - Object Detection Data Prep` notebook.
+
+Run through this notebook (instructions are included).
+
+![Jupyter Notebook](img/jupyter-xview-cc.png)
+
+### Step 3: Run Raster Vision
+
+The experiment we want to run is in `xview/object_detection.py`.
