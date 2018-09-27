@@ -160,3 +160,13 @@ A walkthrough of using QGIS to inspect these results can be found [in the QGIS p
 Viewing the validation scene results for scene ID `013022232023` looks like this:
 
 ![QGIS results explorer](img/qgis-spacenet-cc.png)
+
+## xView Vehicle Object Detection
+
+This example performs object detection to detect vehicles in the xView imagery.
+
+### Step 1: Download the Data
+
+Sign up for an account for the [DIUx xView Detection Challenge](http://xviewdataset.org/). Navigate to the [downloads page](https://challenge.xviewdataset.org/download-links) and download the zipped training images and labels.   
+
+### Step 2: Run the Jupyter Notebook
