@@ -37,10 +37,10 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
                                                   score_thresh=0.5) \
                             .build()
 
-        backend_config = 'https://gist.githubusercontent.com/simonkassel/3ed8cd946790be079879a5a738499bbc/raw/017c4e57e24523ebc2308f35c72619291a65b764/mobilenet-xview-vehicles.config'
+        backend_config_with_aug = 'https://gist.githubusercontent.com/simonkassel/bcaec668dd050589fbf4a3b07f13ebf1/raw/b7f8164dfa8a75ccb87f220f5402cb78d0ded885/mobilenet-xview-vehicles_with_aug.config'
         backend = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
                                   .with_task(task) \
-                                  .with_template(backend_config)\
+                                  .with_template(backend_config_with_aug)\
                                   .with_debug(True) \
                                   .with_batch_size(16) \
                                   .with_num_steps(150000) \
