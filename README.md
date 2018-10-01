@@ -14,7 +14,7 @@ You'll need `docker` (preferably version 18 or above) installed.
 
 ### Setup
 
-To build the examples container, run the following make command:
+To build the examples container, run the following command:
 
 ```shell
 > scripts/build
@@ -22,11 +22,11 @@ To build the examples container, run the following make command:
 
 This will pull down the latest `raster-vision` docker and add some of this repo's code to it.
 
-__Note__: Pre-release, you'll need to build Raster Vision locally for this build step to work.
+__Note__: Pre-release, you'll need to build Raster Vision locally for this build step to work. (ie. run `./scripts/update` in `raster-vision`)
 
 ### Running the console
 
-Whenever the instructions say to "run the console", it meants to spin up an image and drop into a bash shell by doing this:
+Whenever the instructions say to "run the console", it means to spin up an image and drop into a bash shell by doing this:
 
 ```shell
 > scripts/console
@@ -47,7 +47,7 @@ Whenever intructions say to "run jupyter", it means to run the JupyterHub instan
 > scripts/jupyter
 ```
 
-This mounts many of the same directories as `scripts/consle`. The terminal output will give you the URL to go to in order to JupyterHub.
+This mounts many of the same directories as `scripts/consle`. The terminal output will give you the URL to go to in order to use JupyterHub.
 
 ### Running against AWS
 
@@ -64,7 +64,7 @@ job_definition=raster-vision-gpu-newapi
 
 ### QGIS Plugin
 
-We can inspect results quickly by installing the [QGIS plugin](https://github.com/azavea/raster-vision-aws). This is an optional step, and requires QGIS 3. See that repository's README for more installation instructions.
+We can inspect results quickly by installing the [QGIS plugin](https://github.com/azavea/raster-vision-qgis). This is an optional step, and requires QGIS 3. See that repository's README for more installation instructions.
 
 ## Spacenet Building Chip Classification
 
