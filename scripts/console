@@ -26,6 +26,7 @@ then
 
     docker run ${RUNTIME} ${NAME} --rm -it ${TENSORBOARD} ${AWS} ${RV_CONFIG} \
            -v "$SRC"/spacenet:/opt/src/spacenet \
+           -v "$SRC"/potsdam:/opt/src/potsdam \
            -v "$SRC"/notebooks:/opt/notebooks \
            -v "$SRC"/data:/opt/data \
            ${IMAGE} "${@:1}"
