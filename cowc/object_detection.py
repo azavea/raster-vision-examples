@@ -26,7 +26,7 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
                                .with_debug(True)
 
     def exp_cowc_local(self):
-        root_uri = '/opt/data/cowc/potsdam-local/experiments'
+        root_uri = '/opt/data/cowc/potsdam-local/root_uri'
 
         task = self.get_task()
 
@@ -46,7 +46,7 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
             return rv.SceneConfig.builder() \
                                  .with_id(id) \
                                  .with_task(task) \
-                                 .with_raster_source(image) \
+                                 .with_raster_source(image, channel_order=[0,1,2]) \
                                  .with_label_source(labels) \
                                  .build()
 

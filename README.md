@@ -299,12 +299,14 @@ This example performs object detection on cars with the Cars Overhead With Conte
 
 #### Step 1: Download data
 
-Download and unzip the [test data](https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-test.zip) to data/cowc/potsdam-local.
+Download and unzip the [test data](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/cowc/cowc-potsdam-test-data.zip) to data/cowc/potsdam-local. These are cropped GeoTIFFs and labels that are a small subset of the full dataset.
+
+Inside the docker container:
 
 ```console
-> mkdir -p data/cowc/potsdam-local
-> wget -O data/cowc/potsdam-local/data.zip https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-test.zip
-> unzip data/cowc/potsdam-local/data.zip -d data/cowc/potsdam-local/
+> mkdir -p /opt/data/cowc/potsdam-local
+> wget -O /opt/data/cowc/potsdam-local/data.zip https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/cowc/cowc-potsdam-test-data.zip
+> unzip /opt/data/cowc/potsdam-local/data.zip -d /opt/data/cowc/potsdam-local/
 ```
 
 #### Step 2: Run the experiment
@@ -312,7 +314,7 @@ Download and unzip the [test data](https://github.com/azavea/raster-vision-data/
 Inside the docker container, run:
 
 ```
-> rastervision run local -e cowc.object_detection -f *test
+> rastervision run local -e cowc.object_detection -m *local
 ```
 
 You can visit https://localhost:6006/ to view tensorboard as the model trains.
