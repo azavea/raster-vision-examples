@@ -6,6 +6,7 @@ Table of Contents:
 - [Setup and Requirements](#setup-and-requirements)
 - [SpaceNet Building Chip Classification](#spacenet-building-chip-classification)
 - [ISPRS Potsdam Semantic Segmentation](#isprs-potsdam-semantic-segmentation)
+- [xView Vehicle Object Detection](#xview-vehicle-object-detection)
 
 ## Setup and Requirements
 
