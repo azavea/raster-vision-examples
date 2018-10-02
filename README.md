@@ -6,6 +6,7 @@ Table of Contents:
 - [Setup and Requirements](#setup-and-requirements)
 - [SpaceNet Building Chip Classification](#spacenet-building-chip-classification)
 - [ISPRS Potsdam Semantic Segmentation](#isprs-potsdam-semantic-segmentation)
+- [COWC Potsdam Car Object Detection](#cowc-potsdam-car-object-detection)
 - [xView Vehicle Object Detection](#xview-vehicle-object-detection)
 
 ## Setup and Requirements
@@ -67,6 +68,13 @@ job_definition=raster-vision-gpu-newapi
 ### QGIS Plugin
 
 We can inspect results quickly by installing the [QGIS plugin](https://github.com/azavea/raster-vision-qgis). This is an optional step, and requires QGIS 3. See that repository's README for more installation instructions.
+
+### Viewing Tensorboard
+
+During the training step of experiments that have backends that support
+[Tensorboard](https://github.com/tensorflow/tensorboard), you should be able to view Tensorboard
+at either `localhost:6006/` if you are running locally, or `<public_dns>:6006` if you are running
+on AWS, where `<public_dns>` is the pulbic DNS of the instance that is running the training job.
 
 ## Spacenet Building Chip Classification
 
@@ -263,6 +271,56 @@ After running for around 6 hours on a P3 instance, you should have the following
 ### Step 4: View results through QGIS plugin
 
 TODO
+
+## COWC Potsdam Car Object Detection
+
+This example performs object detection on cars with the Cars Overhead With Context dataset over Potsdam, Germany.
+
+### Small local test case
+
+#### Step 1: Download data
+
+Download and unzip the [test data](https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-test.zip) to data/cowc/potsdam-local.
+
+```console
+> mkdir -p data/cowc/potsdam-local
+> wget -O data/cowc/potsdam-local/data.zip https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-test.zip
+> unzip data/cowc/potsdam-local/data.zip -d data/cowc/potsdam-local/
+```
+
+#### Step 2: Run the experiment
+
+Inside the docker container, run:
+
+```
+> rastervision run local -e cowc.object_detection -f *test
+```
+
+You can visit https://localhost:6006/ to view tensorboard as the model trains.
+
+Since this is a local test, you shouldn't expect to see good results -
+this was simply a runthrough to show how to train a model locally.
+
+### Running a larger test on the full dataset
+
+The follow describes how to run against a larger set of data.
+
+#### Step 1: Get the data
+
+To run the larger set, follow these steps. Replace `<ROOT_URI>` with the directory that will be passed
+into the experiment as `root_uri`, which can be local if you're running on a GPU machine or S3.
+
+* In order to run this section, you'll need to get some data from ISPRS.
+Download the [ISPRS Potsdam](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html) imagery using the [data request form](http://www2.isprs.org/commissions/comm3/wg4/data-request-form2.html) and place it in `<ROOT_URI>/isprs-potsdam`.
+* Copy the [cowc-potsdam labels](https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-labels.zip), unzip, and place the files in `<ROOT_URI>/labels/`. These files were generated from the [COWC car detection dataset](https://gdo152.llnl.gov/cowc/) using scripts in [cowc.data](cowc/data/).
+
+#### Step 2: Run the experiment
+
+Inside the docer container, run
+
+```console
+> rastervision run local -e cowc.object_detection -f *full -a root_uri <ROOT_URI>
+```
 
 ## xView Vehicle Object Detection
 

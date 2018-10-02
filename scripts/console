@@ -28,6 +28,7 @@ then
            -v "$SRC"/spacenet:/opt/src/spacenet \
            -v "$SRC"/potsdam:/opt/src/potsdam \
 	   -v "$SRC"/xview:/opt/src/xview \
+           -v "$SRC"/cowc:/opt/src/cowc \
            -v "$SRC"/notebooks:/opt/notebooks \
            -v "$SRC"/data:/opt/data \
            ${IMAGE} "${@:1}"
