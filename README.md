@@ -42,6 +42,25 @@ This will mount the following directories:
 - `notebooks` -> `/opt/notebooks`
 - `data` -> `/opt/data`
 
+### Running Raster Vision
+
+Each example will at some point run the `rastervision` command line. See `rastervision --help` and `rastervision run --help` for usage information.
+
+Use `-a` to pass arguments into the experiment methods; many of which take a `root_uri`, which is where Raster Vision will store all the output of the experiment. If you forget to supply this, Raster Vision will remind you.
+
+Using the `-n` or `--dry-run` flag is useful to see what you're about to run before you run it.
+Combine this with the verbose flag for different levels of output:
+
+```
+> rastervision run spacenet.chip_classification -a root_uri s3://example/ --dry_run
+> rastervision -v run spacenet.chip_classification -a root_uri s3://example/ --dry_run
+> rastervision -vv run spacenet.chip_classification -a root_uri s3://example/ --dry_run
+```
+
+Use `-x` to avoid checking if files exist, which can take a long time for large experiments.
+This is useful to do the first run, but if you haven't changed anything about the experiment and
+are sure the files are there, it's often nice to skip that step.
+
 ### Running Jupyter
 
 Whenever intructions say to "run jupyter", it means to run the JupyterHub instance through docker by doing:
@@ -307,24 +326,55 @@ The follow describes how to run against a larger set of data.
 
 #### Step 1: Get the data
 
-To run the larger set, follow these steps. Replace `<ROOT_URI>` with the directory that will be passed
+To run the larger set, follow these steps. Replace `${ROOT_URI}` with the directory that will be passed
 into the experiment as `root_uri`, which can be local if you're running on a GPU machine or S3.
 
 * In order to run this section, you'll need to get some data from ISPRS.
-Download the [ISPRS Potsdam](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html) imagery using the [data request form](http://www2.isprs.org/commissions/comm3/wg4/data-request-form2.html) and place it in `<ROOT_URI>/isprs-potsdam`.
-* Copy the [cowc-potsdam labels](https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-labels.zip), unzip, and place the files in `<ROOT_URI>/labels/`. These files were generated from the [COWC car detection dataset](https://gdo152.llnl.gov/cowc/) using scripts in [cowc.data](cowc/data/).
+Download the [ISPRS Potsdam](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html) imagery using the [data request form](http://www2.isprs.org/commissions/comm3/wg4/data-request-form2.html) and place it in `${ROOT_URI}/isprs-potsdam`.
+* Copy the [cowc-potsdam labels](https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-labels.zip), unzip, and place the files in `${ROOT_URI}/labels/`. These files were generated from the [COWC car detection dataset](https://gdo152.llnl.gov/cowc/) using scripts in [cowc.data](cowc/data/).
 
 #### Step 2: Run the experiment
 
 Inside the docer container, run
 
 ```console
-> rastervision run local -e cowc.object_detection -f *full -a root_uri <ROOT_URI>
+> rastervision run local -e cowc.object_detection -f *full -a root_uri ${ROOT_URI}
 ```
+
+### See predictions in QGIS
+
+After the model is trained, we can use the "predict package" to make predictions
+in QGIS via the QGIS plugin.
+
+#### Step 1: Find the prediction package
+
+This should be at `${ROOT_URI}/bundle/cowc-object-detection-full/predict_package.zip`
+
+#### Step 2: Load up the local image in QGIS
+
+Load up a project in QGIS that has one of the local sample images at
+`data/cowc/potsdam-local/cowc-potsdam-test`
+
+![QGIS loaded with potsdam image](img/cowc-potsdam-local-qgis-load.png)
+
+#### Step 3: Predict
+
+Use the Predict dialog and set your predict package URI to the URI from Step 1.
+
+![QGIS Predict dialog](img/cowc-potsdam-local-qgis-predict-dialog.png)
+
+After spinning a bit the predictions should look something like this:
+
+![QGIS Predictions](img/cowc-potsdam-local-qgis-predictions.png)
 
 ## xView Vehicle Object Detection
 
 This example performs object detection to detect vehicles in the xView imagery.
+It includes two experiments - one with the smaller [Mobilenet V1](https://github.com/tensorflow/models/blob/5fd32ef62e37a8124bf8849f7bea65fbd8cd7bdd/research/slim/nets/mobilenet_v1.md), and
+the other uses a [Faster RCNN utilizning a by RESNET50](https://arxiv.org/abs/1506.01497).
+
+You can either model or both; if you run both, you'll see an example of how a larger network
+performs with a significant amount of training data vs a smaller network.
 
 ### Step 1: Download the Data
 
@@ -340,6 +390,25 @@ Run through this notebook (instructions are included).
 
 ![Jupyter Notebook](img/jupyter-xview-cc.png)
 
-### Step 3: Run Raster Vision
+### Step 3: Run the experiment(s)
 
-The experiment we want to run is in `xview/object_detection.py`.
+To run the mobilenet experiment, inside the docker container run
+
+```
+> rastervision run ${RUNNER} -e xview.object_detection -f *mobilenet* -a ${ROOT_URI}
+```
+
+To run the resnet experiment, run
+
+```
+> rastervision run ${RUNNER} -e xview.object_detection -f *resnet* -a ${ROOT_URI}
+```
+
+and to run both, simply
+
+```
+> rastervision run ${RUNNER} -e xview.object_detection -a ${ROOT_URI}
+```
+
+where `${ROOT_URI}` is the URI set up in jupyter notebook, and ${RUNNER} is
+the type of runner you are using, e.g. `local` or `aws_batch`.

@@ -26,7 +26,11 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
                                  .build()
         return f
 
-    def exp_xview_resnet(self, root_uri):
+    def exp_xview(self, root_uri):
+        # Number of training steps. Increase this for longer train time
+        # and better results.
+        NUM_STEPS = 100000
+
         task = rv.TaskConfig.builder(rv.OBJECT_DETECTION) \
                             .with_chip_size(300) \
                             .with_classes({"vehicle": (1, "red")}) \
@@ -36,15 +40,27 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
                                                   score_thresh=0.5) \
                             .build()
 
-        backend = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
-                                  .with_task(task) \
-                                  .with_model_defaults(rv.SSD_MOBILENET_V1_COCO) \
-                                  .with_debug(True) \
-                                  .with_batch_size(16) \
-                                  .with_num_steps(150000) \
-                                  .with_train_options(do_monitoring=True,
-                                                      replace_model=True) \
-                                  .build()
+        # Set up the backend base.
+        # Here we create a builder with the configuration that
+        # is common between the two experiments. We don't call
+        # build, so that we can branch off the builder based on
+        # using a mobilenet or faster rcnn resnet model.
+
+        backend_base = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
+                                    .with_task(task) \
+                                    .with_debug(True) \
+                                    .with_batch_size(16) \
+                                    .with_num_steps(NUM_STEPS) \
+                                    .with_train_options(do_monitoring=True,
+                                                        replace_model=True)
+
+        mobilenet = backend_base \
+                    .with_model_defaults(rv.SSD_MOBILENET_V1_COCO) \
+                    .build()
+
+        resnet = backend_base \
+                    .with_model_defaults(rv.FASTER_RCNN_RESNET50_COCO) \
+                    .build()
 
         make_scene = self.scene_maker(task)
 
@@ -56,15 +72,28 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
                                   .with_validation_scenes(val_scenes) \
                                   .build()
 
-        experiment = rv.ExperimentConfig.builder() \
-                                        .with_id('xview-object-detection') \
-                                        .with_root_uri(root_uri) \
-                                        .with_task(task) \
-                                        .with_backend(backend) \
-                                        .with_dataset(dataset) \
-                                        .build()
+        # Set up the experiment base.
+        # Notice we set the "chip_key". This allows the two experiments to
+        # use the same training chips, so that the chip command is only run
+        # once for both experiments.
 
-        return experiment
+        experiment_base = rv.ExperimentConfig.builder() \
+                                            .with_root_uri(root_uri) \
+                                            .with_task(task) \
+                                            .with_dataset(dataset) \
+                                            .with_chip_key("xview-object_detection")
+
+        mn_experiment = experiment_base \
+                        .with_id('xview-object-detection-mobilenet') \
+                        .with_backend(mobilenet) \
+                        .build()
+
+        rn_experiment = experiment_base \
+                        .with_id('xview-object-detection-resnet') \
+                        .with_backend(resnet) \
+                        .build()
+
+        return [mn_experiment, rn_experiment]
 
 if __name__ == '__main__':
     rv.main()
