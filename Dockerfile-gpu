@@ -2,5 +2,7 @@ FROM raster-vision-gpu
 
 COPY ./spacenet /opt/src/spacenet
 COPY ./potsdam /opt/src/potsdam
+COPY ./xview /opt/src/xview
+COPY ./cowc  /opt/src/cowc
 
 CMD ["bash"]
