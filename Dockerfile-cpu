@@ -2,5 +2,6 @@ FROM raster-vision-cpu
 
 COPY ./spacenet /opt/src/spacenet
 COPY ./potsdam /opt/src/potsdam
+COPY ./xview /opt/src/xview
 
 CMD ["bash"]
