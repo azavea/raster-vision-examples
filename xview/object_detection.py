@@ -30,20 +30,20 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
         task = rv.TaskConfig.builder(rv.OBJECT_DETECTION) \
                             .with_chip_size(300) \
                             .with_classes({"vehicle": (1, "red")}) \
-                            .with_chip_options(neg_ratio=0.0,
-                                               ioa_thresh=1.0,
-                                               window_method='sliding') \
+                            .with_chip_options(neg_ratio=1.0,
+                                               ioa_thresh=0.8) \
                             .with_predict_options(merge_thresh=0.1,
                                                   score_thresh=0.5) \
                             .build()
 
-        backend_config = 'https://gist.githubusercontent.com/simonkassel/3ed8cd946790be079879a5a738499bbc/raw/017c4e57e24523ebc2308f35c72619291a65b764/mobilenet-xview-vehicles.config'
         backend = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
                                   .with_task(task) \
-                                  .with_template(backend_config)\
+                                  .with_model_defaults(rv.SSD_MOBILENET_V1_COCO) \
                                   .with_debug(True) \
                                   .with_batch_size(16) \
                                   .with_num_steps(150000) \
+                                  .with_train_options(do_monitoring=True,
+                                                      replace_model=True) \
                                   .build()
 
         make_scene = self.scene_maker(task)
