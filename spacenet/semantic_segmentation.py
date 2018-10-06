@@ -59,8 +59,8 @@ class VegasRoads(SpacenetConfig):
     def get_class_map(self):
         # First class should be background when using GeoJSONRasterSource
         return {
-            'Background': (1, 'black'),
-            'Road': (2, 'orange')
+            'Road': (1, 'orange'),
+            'Background': (2, 'black')
         }
 
 
@@ -78,8 +78,8 @@ class VegasBuildings(SpacenetConfig):
     def get_class_map(self):
         # First class should be background when using GeoJSONRasterSource
         return {
-            'Background': (1, 'black'),
-            'Building': (2, 'orange')
+            'Building': (1, 'orange'),
+            'Background': (2, 'black')
         }
 
 
@@ -91,8 +91,15 @@ def build_scene(task, spacenet_config, id, channel_order=None):
                       .with_stats_transformer() \
                       .build()
 
+    background_class_id = 2
+    line_buffer = 15
+    label_raster_source = rv.RasterSourceConfig.builder(rv.GEOJSON_SOURCE) \
+        .with_uri(spacenet_config.get_label_source_uri(id)) \
+        .with_rasterizer_options(background_class_id, line_buffer=line_buffer) \
+        .build()
+
     label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
-        .with_raster_source(spacenet_config.get_label_source_uri(id)) \
+        .with_raster_source(label_raster_source) \
         .build()
 
     scene = rv.SceneConfig.builder() \
