@@ -80,8 +80,8 @@ Make sure to set the appropriate configuration in your `$HOME/.rastervision/defa
 
 ```ini
 [AWS_BATCH]
-job_queue=raster-vision-gpu
-job_definition=raster-vision-gpu-newapi
+job_queue=rasterVisionQueueStaging
+job_definition=raster-vision-gpu
 ```
 
 ### QGIS Plugin
