@@ -12,7 +12,7 @@ def build_scene(task, data_uri, id, channel_order=None):
         data_uri, id)
 
     label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
-        .with_source_class_map(task.class_map) \
+        .with_rgb_class_map(task.class_map) \
         .with_raster_source(label_source_uri) \
         .build()
 
@@ -84,7 +84,7 @@ class PotsdamSemanticSegmentation(rv.ExperimentSet):
                             .with_chip_size(256) \
                             .with_classes(classes) \
                             .with_chip_options(
-                                number_of_chips=number_of_chips,
+                                chips_per_scene=number_of_chips,
                                 debug_chip_probability=0.2,
                                 negative_survival_probability=1.0) \
                             .build()
