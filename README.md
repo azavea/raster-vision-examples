@@ -397,19 +397,19 @@ Run through this notebook (instructions are included).
 To run the mobilenet experiment, inside the docker container run
 
 ```
-> rastervision run ${RUNNER} -e xview.object_detection -f *mobilenet* -a ${ROOT_URI}
+> rastervision run ${RUNNER} -e xview.object_detection -f *mobilenet* -a root_uri ${ROOT_URI} -a data_uri ${DATA_URI}
 ```
 
 To run the resnet experiment, run
 
 ```
-> rastervision run ${RUNNER} -e xview.object_detection -f *resnet* -a ${ROOT_URI}
+> rastervision run ${RUNNER} -e xview.object_detection -f *resnet* -a root_uri ${ROOT_URI} -a data_uri ${DATA_URI}
 ```
 
 and to run both, simply
 
 ```
-> rastervision run ${RUNNER} -e xview.object_detection -a ${ROOT_URI}
+> rastervision run ${RUNNER} -e xview.object_detection -a root_uri ${ROOT_URI} -a data_uri ${DATA_URI}
 ```
 
 where `${ROOT_URI}` is the URI set up in jupyter notebook, and ${RUNNER} is
