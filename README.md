@@ -4,10 +4,12 @@ This repository holds examples for Raster Vision usage on open datasets.
 
 Table of Contents:
 - [Setup and Requirements](#setup-and-requirements)
-- [SpaceNet Building Chip Classification](#spacenet-building-chip-classification)
+- [SpaceNet Rio Building Chip Classification](#spacenet-rio-building-chip-classification)
+- [Spacenet Vegas Road and Building Semantic Segmentation](#spacenet-vegas-road-and-building-semantic-segmentation)
 - [ISPRS Potsdam Semantic Segmentation](#isprs-potsdam-semantic-segmentation)
 - [COWC Potsdam Car Object Detection](#cowc-potsdam-car-object-detection)
 - [xView Vehicle Object Detection](#xview-vehicle-object-detection)
+
 
 ## Setup and Requirements
 
@@ -93,7 +95,7 @@ During the training step of experiments that have backends that support
 at either `localhost:6006/` if you are running locally, or `<public_dns>:6006` if you are running
 on AWS, where `<public_dns>` is the pulbic DNS of the instance that is running the training job.
 
-## Spacenet Building Chip Classification
+## Spacenet Rio Building Chip Classification
 
 This example performs chip classification to detect buildings in the [SpaceNet](https://spacenetchallenge.github.io/) imagery.
 It is set up to train on the Rio dataset.
@@ -187,6 +189,76 @@ A walkthrough of using QGIS to inspect these results can be found [in the QGIS p
 Viewing the validation scene results for scene ID `013022232023` looks like this:
 
 ![QGIS results explorer](img/qgis-spacenet-cc.png)
+
+
+## Spacenet Vegas Road and Building Semantic Segmentation
+
+This example runs semantic segmentation on the [Spacenet Vegas](https://spacenetchallenge.github.io/AOI_Lists/AOI_2_Vegas.html) dataset with the option to choose either roads or buildings.
+
+### (Optional) Step 1: Download data
+
+You can run this example both remotely and locally without having to manually download the dataset, as Raster Vision can utilize S3 URIs directly. However, if you want to use locally cached data, you can download and unzip the following files to the data directory: `s3://spacenet-dataset/AOI_2_Vegas/AOI_2_Vegas_Train.tar.gz` (for buildings) and `spacenet-dataset/SpaceNet_Roads_Competition/AOI_2_Vegas_Roads_Train.tar.gz` (for roads).
+
+### Step 2: Run experiment
+
+To run a small experiment locally to test that things are setup properly, invoke
+```
+rastervision run local -e spacenet.semantic_segmentation \
+    -a test True \
+    -a root_uri ${ROOT_URI} \
+    -a target ${TARGET}
+```
+where `${ROOT_URI}` is your local RV root, for instance `/opt/data/spacenet-vegas`, and
+`${TARGET}` is either `roads` or `buildings`. If you would like to use data stored locally during Step 1, add the `-a use_remote_data False` flag.
+
+To run a full experiment remotely, invoke
+```
+rastervision run aws_batch -e spacenet.semantic_segmentation \
+    -a test False \
+    -a root_uri ${ROOT_URI} \
+    -a target ${TARGET}
+```
+with a remote `${ROOT_URI}`.
+
+The experiment config is set to train a Mobilenet for 100k steps which takes about 6hrs on a P3 instance. If you modify the config to use Inception for 150k steps (see comment in code), it takes about 24 hours to train on a P3.
+
+### Step 3: View results
+
+After training the Inception model on the Roads dataset, using the QGIS plugin, you should see predictions and an eval like the following.
+
+![Spacenet Vegas Roads in QGIS](img/spacenet-vegas-roads-qgis.png)
+
+```json
+[
+    {
+        "count_error": 131320.3497452814,
+        "precision": 0.79827727905979,
+        "f1": 0.7733719736453241,
+        "class_name": "Road",
+        "class_id": 1,
+        "recall": 0.7574370618553649,
+        "gt_count": 47364639
+    },
+    {
+        "count_error": 213788.03361026093,
+        "precision": 0.9557015578601281,
+        "f1": 0.909516065847437,
+        "class_name": "Background",
+        "class_id": 2,
+        "recall": 0.8988113906793058,
+        "gt_count": 283875361
+    },
+    {
+        "count_error": 201995.82229692052,
+        "precision": 0.9331911601569118,
+        "f1": 0.8900485625895702,
+        "class_name": "average",
+        "class_id": null,
+        "recall": 0.8785960059171598,
+        "gt_count": 331240000
+    }
+]
+```
 
 ## ISPRS Potsdam Semantic Segmentation
 

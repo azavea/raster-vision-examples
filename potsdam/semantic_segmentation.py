@@ -11,9 +11,16 @@ def build_scene(task, data_uri, id, channel_order=None):
     label_source_uri = '{}/5_Labels_for_participants/top_potsdam_{}_label.tif'.format(
         data_uri, id)
 
+    # Using with_rgb_class_map because input TIFFs have classes encoded as RGB colors.
     label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
         .with_rgb_class_map(task.class_map) \
         .with_raster_source(label_source_uri) \
+        .build()
+
+    # URI will be injected by scene config.
+    # Using with_rgb(True) because we want prediction TIFFs to be in RGB format.
+    label_store = rv.LabelStoreConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
+        .with_rgb(True) \
         .build()
 
     scene = rv.SceneConfig.builder() \
@@ -22,6 +29,7 @@ def build_scene(task, data_uri, id, channel_order=None):
                           .with_raster_source(raster_source_uri,
                                               channel_order=channel_order) \
                           .with_label_source(label_source) \
+                          .with_label_store(label_store) \
                           .build()
 
     return scene
@@ -55,7 +63,7 @@ class PotsdamSemanticSegmentation(rv.ExperimentSet):
 
         debug = False
         batch_size = 16
-        number_of_chips = 500
+        chips_per_scene = 500
         num_steps = 100000
         model_type = rv.MOBILENET_V2
 
@@ -67,7 +75,7 @@ class PotsdamSemanticSegmentation(rv.ExperimentSet):
             debug = True
             num_steps = 1
             batch_size = 1
-            number_of_chips = 1
+            chips_per_scene = 50
             train_ids = train_ids[0:1]
             val_ids = val_ids[0:1]
 
@@ -84,7 +92,7 @@ class PotsdamSemanticSegmentation(rv.ExperimentSet):
                             .with_chip_size(256) \
                             .with_classes(classes) \
                             .with_chip_options(
-                                chips_per_scene=number_of_chips,
+                                chips_per_scene=chips_per_scene,
                                 debug_chip_probability=0.2,
                                 negative_survival_probability=1.0) \
                             .build()
