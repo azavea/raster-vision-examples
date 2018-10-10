@@ -1,4 +1,4 @@
-FROM raster-vision-cpu
+FROM quay.io/azavea/raster-vision:cpu-0.8
 
 COPY ./spacenet /opt/src/spacenet
 COPY ./potsdam /opt/src/potsdam
