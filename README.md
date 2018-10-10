@@ -25,8 +25,6 @@ To build the examples container, run the following command:
 
 This will pull down the latest `raster-vision` docker and add some of this repo's code to it.
 
-__Note__: Pre-release, you'll need to build Raster Vision locally for this build step to work. (ie. run `./scripts/update` in `raster-vision`)
-
 ### Running the console
 
 Whenever the instructions say to "run the console", it means to spin up an image and drop into a bash shell by doing this:
