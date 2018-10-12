@@ -285,9 +285,10 @@ To run a full experiment on AWS Batch, upload the data to S3, set `ROOT_URI` and
     -a root_uri ${ROOT_URI} -a data_uri ${DATA_URI}
 ```
 
-### Step 3: Inspect Evaluation results
+### Step 3: View results in QGIS plugin
 
-After running for around 6 hours on a P3 instance, you should have the following evaluation results in `${DATA_URI}/eval/potsdam-seg/eval.json`
+After running for around 6 hours on a P3 instance, you have evaluation metrics and predictions that
+look like:
 
 ```javascript
 [
@@ -357,9 +358,8 @@ After running for around 6 hours on a P3 instance, you should have the following
 ]
 ```
 
-### Step 4: View results through QGIS plugin
+![Potsdam segmentation predictions](img/potsdam-seg-predictions.png)
 
-TODO
 
 ## COWC Potsdam Car Object Detection
 
