@@ -152,7 +152,7 @@ class SpacenetSemanticSegmentation(rv.ExperimentSet):
         channel_order = [0, 1, 2]
 
         debug = False
-        batch_size = 16
+        batch_size = 8
         chips_per_scene = 9
         num_steps = 1e5
         model_type = rv.MOBILENET_V2

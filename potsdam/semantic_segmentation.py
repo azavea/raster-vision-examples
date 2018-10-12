@@ -62,7 +62,7 @@ class PotsdamSemanticSegmentation(rv.ExperimentSet):
         channel_order = [3, 0, 1]
 
         debug = False
-        batch_size = 16
+        batch_size = 8
         chips_per_scene = 500
         num_steps = 100000
         model_type = rv.MOBILENET_V2
