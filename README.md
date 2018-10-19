@@ -52,9 +52,9 @@ Using the `-n` or `--dry-run` flag is useful to see what you're about to run bef
 Combine this with the verbose flag for different levels of output:
 
 ```
-> rastervision run spacenet.chip_classification -a root_uri s3://example/ --dry_run
-> rastervision -v run spacenet.chip_classification -a root_uri s3://example/ --dry_run
-> rastervision -vv run spacenet.chip_classification -a root_uri s3://example/ --dry_run
+> rastervision run spacenet.rio_chip_classification -a root_uri s3://example/ --dry_run
+> rastervision -v run spacenet.rio_chip_classification -a root_uri s3://example/ --dry_run
+> rastervision -vv run spacenet.rio_chip_classification -a root_uri s3://example/ --dry_run
 ```
 
 Use `-x` to avoid checking if files exist, which can take a long time for large experiments.
@@ -112,7 +112,7 @@ Run through this notebook (instructions are included).
 
 ### Step 2: Run Raster Vision
 
-The experiment we want to run is in `spacenet/chip_classification.py`.
+The experiment we want to run is in `spacenet/rio_chip_classification.py`.
 
 To run this, get into the docker container by typing:
 
@@ -125,7 +125,7 @@ You'll need to pass the experiment an S3 URI that you have write access to, that
 If you are running locally (which means you're running this against a GPU machine with a good connection), run:
 
 ```
-> rastervision run local -e spacenet.chip_classification -a root_uri ${RVROOT}
+> rastervision run local -e spacenet.rio_chip_classification -a root_uri ${RVROOT}
 ```
 
 If you are running on AWS Batch, run:
@@ -201,7 +201,7 @@ You can run this example both remotely and locally without having to manually do
 
 ### Step 2: Run experiment
 
-To run a small locally to test that things are setup properly, invoke
+To run a small experiment locally to test that things are setup properly, invoke
 ```
 rastervision run local -e spacenet.vegas \
     -a test True \
