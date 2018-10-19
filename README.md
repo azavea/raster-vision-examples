@@ -5,7 +5,7 @@ This repository holds examples for Raster Vision usage on open datasets.
 Table of Contents:
 - [Setup and Requirements](#setup-and-requirements)
 - [SpaceNet Rio Building Chip Classification](#spacenet-rio-building-chip-classification)
-- [Spacenet Vegas Road and Building Semantic Segmentation](#spacenet-vegas-road-and-building-semantic-segmentation)
+- [Spacenet Vegas Roads and Buildings: All Tasks](#spacenet-vegas)
 - [ISPRS Potsdam Semantic Segmentation](#isprs-potsdam-semantic-segmentation)
 - [COWC Potsdam Car Object Detection](#cowc-potsdam-car-object-detection)
 - [xView Vehicle Object Detection](#xview-vehicle-object-detection)
@@ -52,9 +52,9 @@ Using the `-n` or `--dry-run` flag is useful to see what you're about to run bef
 Combine this with the verbose flag for different levels of output:
 
 ```
-> rastervision run spacenet.chip_classification -a root_uri s3://example/ --dry_run
-> rastervision -v run spacenet.chip_classification -a root_uri s3://example/ --dry_run
-> rastervision -vv run spacenet.chip_classification -a root_uri s3://example/ --dry_run
+> rastervision run spacenet.rio_chip_classification -a root_uri s3://example/ --dry_run
+> rastervision -v run spacenet.rio_chip_classification -a root_uri s3://example/ --dry_run
+> rastervision -vv run spacenet.rio_chip_classification -a root_uri s3://example/ --dry_run
 ```
 
 Use `-x` to avoid checking if files exist, which can take a long time for large experiments.
@@ -112,7 +112,7 @@ Run through this notebook (instructions are included).
 
 ### Step 2: Run Raster Vision
 
-The experiment we want to run is in `spacenet/chip_classification.py`.
+The experiment we want to run is in `spacenet/rio_chip_classification.py`.
 
 To run this, get into the docker container by typing:
 
@@ -125,7 +125,7 @@ You'll need to pass the experiment an S3 URI that you have write access to, that
 If you are running locally (which means you're running this against a GPU machine with a good connection), run:
 
 ```
-> rastervision run local -e spacenet.chip_classification -a root_uri ${RVROOT}
+> rastervision run local -e spacenet.rio_chip_classification -a root_uri ${RVROOT}
 ```
 
 If you are running on AWS Batch, run:
@@ -191,9 +191,9 @@ Viewing the validation scene results for scene ID `013022232023` looks like this
 ![QGIS results explorer](img/qgis-spacenet-cc.png)
 
 
-## Spacenet Vegas Road and Building Semantic Segmentation
+## Spacenet Vegas Roads and Buildings: All Tasks <a name="spacenet-vegas"></a>
 
-This example runs semantic segmentation on the [Spacenet Vegas](https://spacenetchallenge.github.io/AOI_Lists/AOI_2_Vegas.html) dataset with the option to choose either roads or buildings.
+This example shows how to run an experiment on the [Spacenet Vegas](https://spacenetchallenge.github.io/AOI_Lists/AOI_2_Vegas.html) dataset with the option to choose either roads or buildings, and use any task.
 
 ### (Optional) Step 1: Download data
 
@@ -203,28 +203,34 @@ You can run this example both remotely and locally without having to manually do
 
 To run a small experiment locally to test that things are setup properly, invoke
 ```
-rastervision run local -e spacenet.semantic_segmentation \
+rastervision run local -e spacenet.vegas \
     -a test True \
-    -a root_uri ${ROOT_URI} \
-    -a target ${TARGET}
+    -a root_uri <root_uri> \
+    -a target <target> \
+    -a task_type <task_type>
 ```
-where `${ROOT_URI}` is your local RV root, for instance `/opt/data/spacenet-vegas`, and
-`${TARGET}` is either `roads` or `buildings`. If you would like to use data stored locally during Step 1, add the `-a use_remote_data False` flag.
+where:
+* `<root_uri>` is your local RV root, for instance `/opt/data/spacenet-vegas`
+* `<target>` can be either `roads` or `buildings`.
+* `<task_type>` can be `semantic_segmentation`, `object_detection`, or `chip_classification`. However, only `semantic_segmentation` currently works with `roads`.
+
+If you would like to use data stored locally during Step 1, add the `-a use_remote_data False` flag.
 
 To run a full experiment remotely, invoke
 ```
-rastervision run aws_batch -e spacenet.semantic_segmentation \
-    -a test False \
-    -a root_uri ${ROOT_URI} \
-    -a target ${TARGET}
+rastervision run aws_batch -e spacenet.vegas \
+    -a test True \
+    -a root_uri <root_uri> \
+    -a target <target> \
+    -a task_type <task_type>
 ```
-with a remote `${ROOT_URI}`.
+with a remote `<root_uri>`.
 
-The experiment config is set to train a Mobilenet for 100k steps which takes about 6hrs on a P3 instance. If you modify the config to use Inception for 150k steps (see comment in code), it takes about 24 hours to train on a P3.
+Running semantic segmentation on roads trains a Mobilenet for 100k steps which takes about 6hrs on a P3 instance.
 
 ### Step 3: View results
 
-After training the Inception model on the Roads dataset, using the QGIS plugin, you should see predictions and an eval like the following.
+After training a semantic segmentation model on roads, using the QGIS plugin, you should see predictions and an eval similar to the following.
 
 ![Spacenet Vegas Roads in QGIS](img/spacenet-vegas-roads-qgis.png)
 
