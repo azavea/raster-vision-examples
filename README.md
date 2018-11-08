@@ -228,6 +228,10 @@ with a remote `<root_uri>`.
 
 Running semantic segmentation on roads trains a Mobilenet for 100k steps which takes about 6hrs on a P3 instance.
 
+#### Experimental: Use vector tiles to get labels
+
+It is possible to use a Mapbox vector tile endpoint (which contains `{z}/{x}/{y}` as a source of labels. We have tested this with a set of vector tiles created from Open Street Map (OSM). Note that most buildings and some roads present in the Spacenet labels are not present in the OSM data. If you are not using OSM, you might need to change the `class_id_to_filter` values in the experiment configuration. Each `class_id_to_filter` is a mapping from `class_id` to a Mapbox GL filter which is to used to assign class ids to features based on their `properties` field. For more info, search for `class_id_to_filter` in the Raster Vision [docs](https://docs.rastervision.io). To use vector tiles instead of GeoJSON, run the experiment with the following flags: `-a mbtiles_uri <URI> -a mbtiles_zoom <ZOOM_LEVEL>`. 
+
 ### Step 3: View results
 
 After training a semantic segmentation model on roads, using the QGIS plugin, you should see predictions and an eval similar to the following.
