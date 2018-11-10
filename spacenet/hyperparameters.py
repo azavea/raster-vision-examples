@@ -18,12 +18,13 @@ def build_backend(task, test, learning_rate):
         num_steps = 1
         batch_size = 1
 
+    rate_dict = {'baseLearningRate': str(learning_rate)}
     backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
                               .with_task(task) \
                               .with_model_defaults(rv.MOBILENET_V2) \
                               .with_num_steps(num_steps) \
                               .with_batch_size(batch_size) \
-                              .with_config({'baseLearningRate': str(learning_rate)}) \
+                              .with_config(rate_dict) \
                               .with_debug(debug) \
                               .build()
 
@@ -61,11 +62,14 @@ class HyperParameterSearch(rv.ExperimentSet):
         analyzer = rv.AnalyzerConfig.builder(rv.STATS_ANALYZER) \
                                     .build()
         dataset = build_dataset(task, spacenet_config, test)
+        dataset.train_scenes = dataset.train_scenes[
+            0:2**7]  # Reduce number of scenes
 
         retval = []
         for learning_rate in ['0.001', '0.002', '0.005', '0.10']:
             backend = build_backend(task, test, learning_rate)
-            experiment_id = '{}_{}_rate={}'.format(target, task_type.lower(), learning_rate)
+            experiment_id = '{}_{}_rate={}'.format(target, task_type.lower(),
+                                                   learning_rate)
 
             # Need to use stats_analyzer because imagery is uint16.
             experiment = rv.ExperimentConfig.builder() \
