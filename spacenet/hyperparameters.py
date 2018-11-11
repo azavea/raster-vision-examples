@@ -54,8 +54,8 @@ class HyperParameterSearch(rv.ExperimentSet):
         use_remote_data = str_to_bool(use_remote_data)
         spacenet_config = SpacenetConfig.create(use_remote_data, target)
         experiment_id = '{}_{}'.format(target, task_type.lower())
-        chip_uri = os.path.join(root_uri, experiment_id, 'chip')
-        analyze_uri = os.path.join(root_uri, experiment_id, 'analyze')
+        chip_uri = os.path.join(root_uri, 'chip', experiment_id)
+        analyze_uri = os.path.join(root_uri, 'analyze', experiment_id)
 
         validate_options(task_type, target)
 
