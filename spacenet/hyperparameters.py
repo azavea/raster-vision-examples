@@ -32,7 +32,7 @@ def build_backend(task, test, learning_rate):
 
 
 class HyperParameterSearch(rv.ExperimentSet):
-    def exp_main(self, root_uri, use_remote_data=True, test=False):
+    def exp_main(self, root_uri, use_remote_data=True, test=False, learning_rates='0.001'):
         """Run an experiment on the Spacenet Vegas road or building dataset.
 
         This is an example of how to do all three tasks on the same dataset.
@@ -47,6 +47,7 @@ class HyperParameterSearch(rv.ExperimentSet):
         """
         target = BUILDINGS
         task_type = rv.SEMANTIC_SEGMENTATION
+        learning_rates = learning_rates.split(',')
 
         test = str_to_bool(test)
         task_type = task_type.upper()
@@ -66,7 +67,7 @@ class HyperParameterSearch(rv.ExperimentSet):
             0:2**7]  # Reduce number of scenes
 
         retval = []
-        for learning_rate in ['0.001', '0.002', '0.005', '0.10']:
+        for learning_rate in learning_rates:
             backend = build_backend(task, test, learning_rate)
             experiment_id = '{}_{}_rate={}'.format(target, task_type.lower(),
                                                    learning_rate)
