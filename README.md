@@ -266,6 +266,57 @@ After training a semantic segmentation model on roads, using the QGIS plugin, yo
 ]
 ```
 
+## Spacenet Vegas Hyperparameter Tuning Example ##
+
+This example is based on the Las Vegas buildings semantic segmentation example described above.
+
+In this example, we run several related experiments, allowing the base learning rate to vary over them.
+These experiments are all related in that they all work over the same dataset (the Las Vegas buildings data), and in fact they `analyze` and `chip` stages are shared between all of the experiments.
+That is achieving by making sure that the `chip_uri` and `analyze_uri` are [the same for all of the experiments](spacenet/hyperparameters.py#L83-L84) so that rastervision can detect the redundancy.
+
+To run the experiments on AWS batch type something like:
+
+```bash
+rastervision run aws_batch \
+	     -e spacenet.hyperparameters \
+	     -a use_remote_data True \
+	     -a root_uri s3://my-bucket/vegas-hyperparameters \
+	     -a learning_rates '0.0001,0.001,0.002,0.003,0.004,0.005,0.10'
+	     -x
+```
+
+Typing that will train DeepLab models over the Las Vegas buildings dataset with respective base learning rates of 0.0001, 0.001, 0.002, 0.003, 0.004, 0.005, and 0.10.
+The number of steps is 10,000 for all experiments.
+Because this is for demonstration purposes only, the training dataset has been reduced to only 128 scenes.
+
+The f1 scores for buildings as a function of base learning rate are shown below.
+
+| Base Learning Rate  | Building f1 Score  |
+| ------------------- | ------------------ |
+| 0.0001              | 0.7337961752864327 |
+| 0.001               | 0.7616993477580662 |
+| 0.002               | 0.7889177881341606 |
+| 0.003               | 0.7864549469541627 |
+| 0.004               | 0.4194065664072375 |
+| 0.005               | 0.5070458576486434 |
+| 0.1                 | 0.5046626369613472 |
+
+The overall f1 scores as a function of base learning rate are shown below.
+
+| Base Learning Rate  | Overall f1 Score   |
+| ------------------- | ------------------- |
+| 0.0001              | 0.8593602075530826  |
+| 0.001               | 0.8714577760700831  |
+| 0.002               | 0.8874310574766863  |
+| 0.003               | 0.876330712364558   |
+| 0.004               | 0.495666977640978   |
+| 0.005               | 0.23329045862436176 |
+| 0.1                 | 0.2383655704809608  |
+
+(Disclaimer: We are not claiming that the numbers above are useful or interesting, the sole intent here is demonstrate how to vary hyperparameters using rastervision.)
+
+The code can be found [here](spacenet/hyperparameters.py).
+
 ## ISPRS Potsdam Semantic Segmentation
 
 This example performs semantic segmentation on the [ISPRS Potsdam dataset](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html). The dataset consists of 5cm aerial imagery over Potsdam, Germany, segmented into six classes including building, tree, low vegetation, impervious, car, and clutter. For more info see our [blog post](https://www.azavea.com/blog/2017/05/30/deep-learning-on-aerial-imagery/).
