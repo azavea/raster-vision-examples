@@ -271,8 +271,8 @@ After training a semantic segmentation model on roads, using the QGIS plugin, yo
 This example is based on the Las Vegas buildings semantic segmentation example described above.
 
 In this example, we run several related experiments, allowing the base learning rate to vary over them.
-These experiments are all related in that they all work over the same dataset (the Las Vegas buildings data), and in fact they `analyze` and `chip` stages are shared between all of the experiments.
-That is achieving by making sure that the `chip_uri` and `analyze_uri` are [the same for all of the experiments](spacenet/hyperparameters.py#L83-L84) so that rastervision can detect the redundancy.
+These experiments are all related, in that they all work over the same dataset (the Las Vegas buildings data), and in fact the `analyze` and `chip` stages are shared between all of the experiments.
+That sharing of early stages is achieving by making sure that the `chip_key` and `analyze_key` are [the same for all of the experiments](spacenet/hyperparameters.py#L80-L81) so that rastervision can detect the redundancy.
 
 To run the experiments on AWS batch type something like:
 

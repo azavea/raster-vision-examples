@@ -33,9 +33,7 @@ def build_backend(task, test, learning_rate):
 
 class HyperParameterSearch(rv.ExperimentSet):
     def exp_main(self, root_uri, use_remote_data=True, test=False, learning_rates='0.001'):
-        """Run an experiment on the Spacenet Vegas road or building dataset.
-
-        This is an example of how to do all three tasks on the same dataset.
+        """Run an experiment on the Spacenet Vegas building dataset.
 
         Args:
             root_uri: (str): root of where to put output
@@ -53,9 +51,7 @@ class HyperParameterSearch(rv.ExperimentSet):
         task_type = task_type.upper()
         use_remote_data = str_to_bool(use_remote_data)
         spacenet_config = SpacenetConfig.create(use_remote_data, target)
-        experiment_id = '{}_{}'.format(target, task_type.lower())
-        chip_uri = os.path.join(root_uri, 'chip', experiment_id)
-        analyze_uri = os.path.join(root_uri, 'analyze', experiment_id)
+        ac_key = '{}_{}'.format(target, task_type.lower())
 
         validate_options(task_type, target)
 
@@ -63,10 +59,11 @@ class HyperParameterSearch(rv.ExperimentSet):
         analyzer = rv.AnalyzerConfig.builder(rv.STATS_ANALYZER) \
                                     .build()
         dataset = build_dataset(task, spacenet_config, test)
-        dataset.train_scenes = dataset.train_scenes[
-            0:2**7]  # Reduce number of scenes
 
-        retval = []
+        # Reduce number of scenes
+        dataset.train_scenes = dataset.train_scenes[0:2**7]
+
+        exps = []
         for learning_rate in learning_rates:
             backend = build_backend(task, test, learning_rate)
             experiment_id = '{}_{}_rate={}'.format(target, task_type.lower(),
@@ -80,12 +77,12 @@ class HyperParameterSearch(rv.ExperimentSet):
                                             .with_analyzer(analyzer) \
                                             .with_dataset(dataset) \
                                             .with_root_uri(root_uri) \
-                                            .with_analyze_uri(analyze_uri) \
-                                            .with_chip_uri(chip_uri)
+                                            .with_analyze_key(ac_key) \
+                                            .with_chip_key(ac_key)
 
-            retval.append(experiment.build())
+            exps.append(experiment.build())
 
-        return retval
+        return exps
 
 
 if __name__ == '__main__':
