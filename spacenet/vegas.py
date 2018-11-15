@@ -26,7 +26,7 @@ class SpacenetConfig(object):
             self.base_uri, self.raster_dir,
             '{}{}.tif'.format(self.raster_fn_prefix, id))
 
-    def get_label_source_uri(self, id):
+    def get_geojson_uri(self, id):
         return os.path.join(
             self.base_uri, self.label_dir,
             '{}{}.geojson'.format(self.label_fn_prefix, id))
@@ -42,6 +42,10 @@ class SpacenetConfig(object):
 
     @abstractmethod
     def get_class_map(self):
+        pass
+
+    @abstractmethod
+    def get_class_id_to_filter(self):
         pass
 
 
@@ -63,6 +67,9 @@ class VegasRoads(SpacenetConfig):
             'Background': (2, 'black')
         }
 
+    def get_class_id_to_filter(self):
+        return {1: ['has', 'highway']}
+
 
 class VegasBuildings(SpacenetConfig):
     def __init__(self, use_remote_data):
@@ -82,8 +89,11 @@ class VegasBuildings(SpacenetConfig):
             'Background': (2, 'black')
         }
 
+    def get_class_id_to_filter(self):
+        return {1: ['has', 'building']}
 
-def build_scene(task, spacenet_config, id, channel_order=None):
+
+def build_scene(task, spacenet_config, id, channel_order=None, mbtiles_options=None):
     # Need to use stats_transformer because imagery is uint16.
     raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
                       .with_uri(spacenet_config.get_raster_source_uri(id)) \
@@ -91,22 +101,31 @@ def build_scene(task, spacenet_config, id, channel_order=None):
                       .with_stats_transformer() \
                       .build()
 
-    label_source_uri = spacenet_config.get_label_source_uri(id)
+    if mbtiles_options is None:
+        vector_source = spacenet_config.get_geojson_uri(id)
+    else:
+        class_id_to_filter = spacenet_config.get_class_id_to_filter()
+        vector_source = rv.VectorSourceConfig.builder(rv.MBTILES_SOURCE) \
+            .with_class_inference(class_id_to_filter=class_id_to_filter,
+                                  default_class_id=None) \
+            .with_uri(mbtiles_options.uri) \
+            .with_zoom(mbtiles_options.zoom) \
+            .build()
 
     if task.task_type == rv.SEMANTIC_SEGMENTATION:
         background_class_id = 2
         line_buffer = 15
-        label_raster_source = rv.RasterSourceConfig.builder(rv.GEOJSON_SOURCE) \
-            .with_uri(label_source_uri) \
+        label_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
+            .with_vector_source(vector_source) \
             .with_rasterizer_options(background_class_id, line_buffer=line_buffer) \
             .build()
 
-        label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
+        label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \
             .with_raster_source(label_raster_source) \
             .build()
     elif task.task_type == rv.CHIP_CLASSIFICATION:
-        label_source = rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION_GEOJSON) \
-                                           .with_uri(label_source_uri) \
+        label_source = rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION) \
+                                           .with_vector_source(vector_source) \
                                            .with_ioa_thresh(0.01) \
                                            .with_use_intersection_over_cell(True) \
                                            .with_pick_min_class_id(True) \
@@ -114,8 +133,8 @@ def build_scene(task, spacenet_config, id, channel_order=None):
                                            .with_infer_cells(True) \
                                            .build()
     elif task.task_type == rv.OBJECT_DETECTION:
-        label_source = rv.LabelSourceConfig.builder(rv.OBJECT_DETECTION_GEOJSON) \
-                                           .with_uri(label_source_uri) \
+        label_source = rv.LabelSourceConfig.builder(rv.OBJECT_DETECTION) \
+                                           .with_vector_source(vector_source) \
                                            .build()
 
     scene = rv.SceneConfig.builder() \
@@ -128,7 +147,7 @@ def build_scene(task, spacenet_config, id, channel_order=None):
     return scene
 
 
-def build_dataset(task, spacenet_config, test):
+def build_dataset(task, spacenet_config, test, mbtiles_options=None):
     scene_ids = spacenet_config.get_scene_ids()
     if len(scene_ids) == 0:
         raise ValueError('No scenes found. Something is configured incorrectly.')
@@ -148,9 +167,11 @@ def build_dataset(task, spacenet_config, test):
     val_ids = val_ids[0:num_val_scenes]
     channel_order = [0, 1, 2]
 
-    train_scenes = [build_scene(task, spacenet_config, id, channel_order)
+    train_scenes = [build_scene(task, spacenet_config, id, channel_order,
+                                mbtiles_options=mbtiles_options)
                     for id in train_ids]
-    val_scenes = [build_scene(task, spacenet_config, id, channel_order)
+    val_scenes = [build_scene(task, spacenet_config, id, channel_order,
+                              mbtiles_options=mbtiles_options)
                   for id in val_ids]
     dataset = rv.DatasetConfig.builder() \
                               .with_train_scenes(train_scenes) \
@@ -273,7 +294,7 @@ def str_to_bool(x):
     return x
 
 
-def validate_options(task_type, target):
+def validate_options(task_type, target, mbtiles_uri, mbtiles_zoom):
     if task_type not in [rv.SEMANTIC_SEGMENTATION, rv.CHIP_CLASSIFICATION,
                          rv.OBJECT_DETECTION]:
         raise ValueError('{} is not a valid task_type'.format(task_type))
@@ -283,12 +304,30 @@ def validate_options(task_type, target):
 
     if target == ROADS:
         if task_type in [rv.CHIP_CLASSIFICATION, rv.OBJECT_DETECTION]:
-            raise ValueError('{} is not valid task_type for target="roads"'.format(task))
+            raise ValueError('{} is not valid task_type for target="roads"'.format(
+                task_type))
+
+    if ((mbtiles_uri and not mbtiles_zoom) or
+            (not mbtiles_uri and mbtiles_zoom)):
+        raise ValueError('Must specify both uri and zoom to use MBTiles')
+
+
+class MBTilesOptions():
+    def __init__(self, uri, zoom):
+        self.uri = uri
+        self.zoom = int(zoom)
+
+    @staticmethod
+    def build(uri, zoom):
+        if uri is None and zoom is None:
+            return None
+        else:
+            return MBTilesOptions(uri, zoom)
 
 
 class SpacenetVegas(rv.ExperimentSet):
     def exp_main(self, root_uri, target=BUILDINGS, use_remote_data=True, test=False,
-                 task_type=rv.SEMANTIC_SEGMENTATION):
+                 task_type=rv.SEMANTIC_SEGMENTATION, mbtiles_uri=None, mbtiles_zoom=None):
         """Run an experiment on the Spacenet Vegas road or building dataset.
 
         This is an example of how to do all three tasks on the same dataset.
@@ -308,13 +347,16 @@ class SpacenetVegas(rv.ExperimentSet):
         use_remote_data = str_to_bool(use_remote_data)
         spacenet_config = SpacenetConfig.create(use_remote_data, target)
         experiment_id = '{}_{}'.format(target, task_type.lower())
-        validate_options(task_type, target)
+        validate_options(task_type, target, mbtiles_uri, mbtiles_zoom)
+
+        mbtiles_options = MBTilesOptions.build(mbtiles_uri, mbtiles_zoom)
 
         task = build_task(task_type, spacenet_config.get_class_map())
         backend = build_backend(task, test)
         analyzer = rv.AnalyzerConfig.builder(rv.STATS_ANALYZER) \
                                     .build()
-        dataset = build_dataset(task, spacenet_config, test)
+        dataset = build_dataset(task, spacenet_config, test,
+                                mbtiles_options=mbtiles_options)
 
         # Need to use stats_analyzer because imagery is uint16.
         experiment = rv.ExperimentConfig.builder() \
