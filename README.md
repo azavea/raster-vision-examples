@@ -39,9 +39,18 @@ Whenever the instructions say to "run the console", it means to spin up an image
 This will mount the following directories:
 - `${HOME}/.aws` -> `/root/.aws`
 - `${HOME}/.rastervision` -> `/root/.rastervision`
-- `spacenet` -> `/opt/src/spacenet`
 - `notebooks` -> `/opt/notebooks`
 - `data` -> `/opt/data`
+- `spacenet` -> `/opt/src/spacenet`
+- `potsdam` -> `/opt/src/potsdam`
+- `xview` -> `/opt/src/xview`
+- `cowc` -> `/opt/src/cowc`
+
+### "Developer Mode"
+
+It can be helpful for debugging purposes to use a local copy of Raster Vision rather than the version baked into the default Docker image (the latest version on Quay). To do this, you can set the `RASTER_VISION_REPO` environment variable to the location of the Raster Vision repo on your local filesystem. If this is set, the `build` script will set the base image to `raster-vision-{cpu,gpu}`. The `console` script will also mount `$RASTER_VISION_REPO/rastervision` to `/opt/src/rastervision` inside the container. You can then set breakpoints in your local copy of Raster Vision in order to debug experiments run inside the container.
+
+In addition, if you would like to mount a custom data directory on your local filesystem into the container, you can set the `RASTER_VISION_DATA_DIR` environment variable before running the `console` script.
 
 ### Running Raster Vision
 

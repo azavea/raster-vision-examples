@@ -20,10 +20,24 @@ then
 
     if [ $# -eq 0 -o "${1:-}" = "--cpu" ]
     then
-        docker build -t raster-vision-examples-cpu -f Dockerfile-cpu .
+        if [ -z "$RASTER_VISION_REPO" ]
+        then
+            BASE_IMAGE="quay.io/azavea/raster-vision:cpu-0.8"
+        else
+            BASE_IMAGE="raster-vision-cpu"
+        fi
+
+        docker build --build-arg BASE_IMAGE="$BASE_IMAGE" -t raster-vision-examples-cpu -f Dockerfile-cpu .
     fi
     if [ $# -eq 0 -o "${1:-}" = "--gpu" ]
     then
-        docker build -t raster-vision-examples-gpu -f Dockerfile-gpu .
+        if [ -z "$RASTER_VISION_REPO" ]
+        then
+            BASE_IMAGE="quay.io/azavea/raster-vision:gpu-0.8"
+        else
+            BASE_IMAGE="raster-vision-gpu"
+        fi
+
+        docker build --build-arg BASE_IMAGE="$BASE_IMAGE" -t raster-vision-examples-gpu -f Dockerfile-gpu .
     fi
 fi
