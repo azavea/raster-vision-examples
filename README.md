@@ -461,13 +461,13 @@ This example performs object detection on cars with the Cars Overhead With Conte
 
 #### Step 1: Download data
 
-Download and unzip the [test data](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/cowc/cowc-potsdam-test-data.zip) to data/cowc/potsdam-local. These are cropped GeoTIFFs and labels that are a small subset of the full dataset.
+Download and unzip the [test data](https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-test.zip) to data/cowc/potsdam-local. These are cropped GeoTIFFs and labels that are a small subset of the full dataset.
 
 Inside the docker container:
 
 ```console
 > mkdir -p /opt/data/cowc/potsdam-local
-> wget -O /opt/data/cowc/potsdam-local/data.zip https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/cowc/cowc-potsdam-test-data.zip
+> wget -O /opt/data/cowc/potsdam-local/data.zip https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-test.zip
 > unzip /opt/data/cowc/potsdam-local/data.zip -d /opt/data/cowc/potsdam-local/
 ```
 
