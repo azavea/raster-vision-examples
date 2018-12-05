@@ -93,7 +93,7 @@ class VegasBuildings(SpacenetConfig):
         return {1: ['has', 'building']}
 
 
-def build_scene(task, spacenet_config, id, channel_order=None, mbtiles_options=None):
+def build_scene(task, spacenet_config, id, channel_order=None, vector_tile_options=None):
     # Need to use stats_transformer because imagery is uint16.
     raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
                       .with_uri(spacenet_config.get_raster_source_uri(id)) \
@@ -101,15 +101,17 @@ def build_scene(task, spacenet_config, id, channel_order=None, mbtiles_options=N
                       .with_stats_transformer() \
                       .build()
 
-    if mbtiles_options is None:
+    if vector_tile_options is None:
         vector_source = spacenet_config.get_geojson_uri(id)
     else:
+        options = vector_tile_options
         class_id_to_filter = spacenet_config.get_class_id_to_filter()
-        vector_source = rv.VectorSourceConfig.builder(rv.MBTILES_SOURCE) \
+        vector_source = rv.VectorSourceConfig.builder(rv.VECTOR_TILE_SOURCE) \
             .with_class_inference(class_id_to_filter=class_id_to_filter,
                                   default_class_id=None) \
-            .with_uri(mbtiles_options.uri) \
-            .with_zoom(mbtiles_options.zoom) \
+            .with_uri(options.uri) \
+            .with_zoom(options.zoom) \
+            .with_id_field(options.id_field) \
             .build()
 
     if task.task_type == rv.SEMANTIC_SEGMENTATION:
@@ -147,7 +149,7 @@ def build_scene(task, spacenet_config, id, channel_order=None, mbtiles_options=N
     return scene
 
 
-def build_dataset(task, spacenet_config, test, mbtiles_options=None):
+def build_dataset(task, spacenet_config, test, vector_tile_options=None):
     scene_ids = spacenet_config.get_scene_ids()
     if len(scene_ids) == 0:
         raise ValueError('No scenes found. Something is configured incorrectly.')
@@ -168,10 +170,10 @@ def build_dataset(task, spacenet_config, test, mbtiles_options=None):
     channel_order = [0, 1, 2]
 
     train_scenes = [build_scene(task, spacenet_config, id, channel_order,
-                                mbtiles_options=mbtiles_options)
+                                vector_tile_options=vector_tile_options)
                     for id in train_ids]
     val_scenes = [build_scene(task, spacenet_config, id, channel_order,
-                              mbtiles_options=mbtiles_options)
+                              vector_tile_options=vector_tile_options)
                   for id in val_ids]
     dataset = rv.DatasetConfig.builder() \
                               .with_train_scenes(train_scenes) \
@@ -294,7 +296,7 @@ def str_to_bool(x):
     return x
 
 
-def validate_options(task_type, target, mbtiles_uri, mbtiles_zoom):
+def validate_options(task_type, target, vector_tile_options):
     if task_type not in [rv.SEMANTIC_SEGMENTATION, rv.CHIP_CLASSIFICATION,
                          rv.OBJECT_DETECTION]:
         raise ValueError('{} is not a valid task_type'.format(task_type))
@@ -307,27 +309,30 @@ def validate_options(task_type, target, mbtiles_uri, mbtiles_zoom):
             raise ValueError('{} is not valid task_type for target="roads"'.format(
                 task_type))
 
-    if ((mbtiles_uri and not mbtiles_zoom) or
-            (not mbtiles_uri and mbtiles_zoom)):
-        raise ValueError('Must specify both uri and zoom to use MBTiles')
+    if vector_tile_options is not None:
+        if len(vector_tile_options.split(',')) != 3:
+            raise ValueError(
+                'vector_tile_options needs to have 3 comma-delimited values')
 
 
-class MBTilesOptions():
-    def __init__(self, uri, zoom):
+class VectorTileOptions():
+    def __init__(self, uri, zoom, id_field):
         self.uri = uri
         self.zoom = int(zoom)
+        self.id_field = id_field
 
     @staticmethod
-    def build(uri, zoom):
-        if uri is None and zoom is None:
+    def build(config_str):
+        if config_str is None:
             return None
         else:
-            return MBTilesOptions(uri, zoom)
+            uri, zoom, id_field = config_str.split(',')
+            return VectorTileOptions(uri, zoom, id_field)
 
 
 class SpacenetVegas(rv.ExperimentSet):
     def exp_main(self, root_uri, target=BUILDINGS, use_remote_data=True, test=False,
-                 task_type=rv.SEMANTIC_SEGMENTATION, mbtiles_uri=None, mbtiles_zoom=None):
+                 task_type=rv.SEMANTIC_SEGMENTATION, vector_tile_options=None):
         """Run an experiment on the Spacenet Vegas road or building dataset.
 
         This is an example of how to do all three tasks on the same dataset.
@@ -341,22 +346,26 @@ class SpacenetVegas(rv.ExperimentSet):
                 test and generate debug output
             task_type: (str) valid options are semantic_segmentation, object_detection,
                 and chip_classification
+            vector_tile_options: (str or None) space delimited list of uri, zoom, and
+                id_field. See VectorTileVectorSourceConfigBuilder.with_uri, .with_zoom
+                and .with_id_field methods for more details.
         """
         test = str_to_bool(test)
         task_type = task_type.upper()
         use_remote_data = str_to_bool(use_remote_data)
         spacenet_config = SpacenetConfig.create(use_remote_data, target)
         experiment_id = '{}_{}'.format(target, task_type.lower())
-        validate_options(task_type, target, mbtiles_uri, mbtiles_zoom)
 
-        mbtiles_options = MBTilesOptions.build(mbtiles_uri, mbtiles_zoom)
+        print(vector_tile_options)
+        validate_options(task_type, target, vector_tile_options)
+        vector_tile_options = VectorTileOptions.build(vector_tile_options)
 
         task = build_task(task_type, spacenet_config.get_class_map())
         backend = build_backend(task, test)
         analyzer = rv.AnalyzerConfig.builder(rv.STATS_ANALYZER) \
                                     .build()
         dataset = build_dataset(task, spacenet_config, test,
-                                mbtiles_options=mbtiles_options)
+                                vector_tile_options=vector_tile_options)
 
         # Need to use stats_analyzer because imagery is uint16.
         experiment = rv.ExperimentConfig.builder() \
