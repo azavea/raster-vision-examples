@@ -36,6 +36,7 @@ then
            -v "$REPO_ROOT"/potsdam:/opt/src/potsdam \
 	       -v "$REPO_ROOT"/xview:/opt/src/xview \
            -v "$REPO_ROOT"/cowc:/opt/src/cowc \
+           -v "$REPO_ROOT"/other:/opt/src/other \
            -v "$REPO_ROOT"/notebooks:/opt/notebooks \
            ${SRC_FLAGS} -v "$DATA_DIR":/opt/data \
            ${IMAGE} "${@:1}"

@@ -5,5 +5,6 @@ COPY ./spacenet /opt/src/spacenet
 COPY ./potsdam /opt/src/potsdam
 COPY ./xview /opt/src/xview
 COPY ./cowc  /opt/src/cowc
+COPY ./other  /opt/src/other
 
 CMD ["bash"]
