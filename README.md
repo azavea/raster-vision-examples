@@ -6,6 +6,7 @@ Table of Contents:
 - [Setup and Requirements](#setup-and-requirements)
 - [Model Zoo](#model-zoo)
 - [SpaceNet Rio Building Chip Classification](#spacenet-rio-building-chip-classification)
+- [SpaceNet Rio Building Semantic Segmentation](#spacenet-rio-building-semantic-segmentation)
 - [Spacenet Vegas Roads and Buildings: All Tasks](#spacenet-vegas)
 - [ISPRS Potsdam Semantic Segmentation](#isprs-potsdam-semantic-segmentation)
 - [COWC Potsdam Car Object Detection](#cowc-potsdam-car-object-detection)
@@ -221,6 +222,44 @@ Viewing the validation scene results for scene ID `013022232023` looks like this
 
 ![QGIS results explorer](img/qgis-spacenet-cc.png)
 
+
+## Spacenet Rio Building Semantic Segmentation
+
+An experiment to do semantic segmentation on Spacenet Rio is available [here](spacenet/rio_semantic_segmentation.py). A prerequisite is having run the [Rio Chip Classification](#spacenet-rio-building-chip-classification) Jupyter notebook. The results should look something like:
+
+![Spacenet Rio Building Semantic Segmentation](img/spacenet-rio-semseg.png)
+
+```
+"overall": [
+    {
+        "recall": 0.6933642097495366,
+        "precision": 0.7181072275154092,
+        "class_name": "Building",
+        "gt_count": 11480607,
+        "count_error": 119679.64457523893,
+        "f1": 0.7023217656506746,
+        "class_id": 1
+    },
+    {
+        "recall": 0.978149141560173,
+        "precision": 0.9763586125303796,
+        "class_name": "Background",
+        "gt_count": 147757124,
+        "count_error": 31820.188126279452,
+        "f1": 0.9771849696422493,
+        "class_id": 2
+    },
+    {
+        "recall": 0.9576169230896666,
+        "precision": 0.9577393905661922,
+        "class_name": "average",
+        "gt_count": 159237731,
+        "count_error": 38154.615804881076,
+        "f1": 0.9573680807430468,
+        "class_id": null
+    }
+]
+```
 
 ## Spacenet Vegas Roads and Buildings: All Tasks <a name="spacenet-vegas"></a>
 
