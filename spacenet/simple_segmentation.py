@@ -7,7 +7,7 @@ from rastervision.utils.files import list_paths
 
 class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
 
-    def exp_main(self, root_uri):
+    def exp_main(self, root_uri, test='False'):
         """Run an experiment on the Spacenet Vegas building dataset.
 
         This is a simple example of how to do semantic segmentation.
@@ -29,7 +29,13 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
             label_re.match(label_path).group(1)
             for label_path in label_paths]
 
+        if test == 'True':
+            scene_ids = scene_ids[0:10]
+        random.seed(5678)
         random.shuffle(scene_ids)
+        # Workaround to handle scene 1000 missing on S3.
+        if '1000' in scene_ids:
+            scene_ids.remove('1000')
         num_train_ids = round(len(scene_ids) * 0.8)
         train_ids = scene_ids[0:num_train_ids]
         val_ids = scene_ids[num_train_ids:]
@@ -48,16 +54,23 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
                                 target_count_threshold=1000) \
                             .build()
 
-          backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
+        num_steps = 1e5
+        batch_size = 8
+        if test == 'True':
+            num_steps = 1
+            batch_size = 1
+
+        backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
                                     .with_task(task) \
                                     .with_model_defaults(rv.MOBILENET_V2) \
-                                    .with_num_steps(1e5) \
-                                    .with_batch_size(8) \
+                                    .with_num_steps(num_steps) \
+                                    .with_batch_size(batch_size) \
                                     .with_debug(False) \
                                     .build()
 
         def build_scene(id):
             train_image_uri = os.path.join(base_uri, raster_dir,
+
                                            '{}{}.tif'.format(raster_fn_prefix, id))
 
             raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
@@ -67,8 +80,7 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
                 .build()
 
             vector_source = os.path.join(
-                base_uri, label_dir, '{}{}.geojson'.format(label_fn_prefix, id))
-
+                label_dir, '{}{}.geojson'.format(label_fn_prefix, id))
             label_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
                 .with_vector_source(vector_source) \
                 .with_rasterizer_options(2, line_buffer=16) \
