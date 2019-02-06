@@ -14,6 +14,8 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
 
         Args:
             root_uri: (str): root of where to put output
+            test: (str): 'True' or 'False', whether or not to run a small
+                subset of the experiment
         """
         base_uri = 's3://spacenet-dataset/SpaceNet_Buildings_Dataset_Round2/spacenetV2_Train/AOI_2_Vegas'
 
@@ -70,7 +72,6 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
 
         def build_scene(id):
             train_image_uri = os.path.join(base_uri, raster_dir,
-
                                            '{}{}.tif'.format(raster_fn_prefix, id))
 
             raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
