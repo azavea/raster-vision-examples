@@ -6,7 +6,7 @@ Table of Contents:
 - [Setup and Requirements](#setup-and-requirements)
 - [Model Zoo](#model-zoo)
 - [SpaceNet Rio Building Chip Classification](#spacenet-rio-building-chip-classification)
-- [Spacenet Vegas Simple Segmentation](#spacenet-vegas-simple-segmentation)
+- [Spacenet Vegas Simple Segmentation](#spacenet-vegas-simple-semantic-segmentation)
 - [Spacenet Vegas Roads and Buildings: All Tasks](#spacenet-vegas)
 - [ISPRS Potsdam Semantic Segmentation](#isprs-potsdam-semantic-segmentation)
 - [COWC Potsdam Car Object Detection](#cowc-potsdam-car-object-detection)
