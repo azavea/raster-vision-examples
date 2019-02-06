@@ -34,6 +34,7 @@ then
     docker run ${RUNTIME} ${NAME} --rm -it ${TENSORBOARD} ${AWS} ${RV_CONFIG} \
            -v "$REPO_ROOT"/spacenet:/opt/src/spacenet \
            -v "$REPO_ROOT"/potsdam:/opt/src/potsdam \
+	   -v "$REPO_ROOT"/uswtdb:/opt/src/uswtdb \
 	       -v "$REPO_ROOT"/xview:/opt/src/xview \
            -v "$REPO_ROOT"/cowc:/opt/src/cowc \
            -v "$REPO_ROOT"/notebooks:/opt/notebooks \
