@@ -6,6 +6,7 @@ Table of Contents:
 - [Setup and Requirements](#setup-and-requirements)
 - [Model Zoo](#model-zoo)
 - [SpaceNet Rio Building Chip Classification](#spacenet-rio-building-chip-classification)
+- [Spacenet Vegas Simple Segmentation](#spacenet-vegas-simple-semantic-segmentation)
 - [SpaceNet Rio Building Semantic Segmentation](#spacenet-rio-building-semantic-segmentation)
 - [Spacenet Vegas Roads and Buildings: All Tasks](#spacenet-vegas)
 - [ISPRS Potsdam Semantic Segmentation](#isprs-potsdam-semantic-segmentation)
@@ -222,6 +223,65 @@ Viewing the validation scene results for scene ID `013022232023` looks like this
 
 ![QGIS results explorer](img/qgis-spacenet-cc.png)
 
+## Spacenet Vegas Simple Semantic Segmentation
+
+This is an example of a simple semantic segmentation task. It shows how to run an experiment to segment buildings using the [Spacenet Vegas](https://spacenetchallenge.github.io/AOI_Lists/AOI_2_Vegas.html) dataset. This experiment reads the data directly from S3 URIs.
+
+### Step 1: Run experiment
+
+This script includes an option to run a 'test' version of the experiment that is small enough to be run locally on a cpu. To do so, run
+
+```
+rastervision run local -p spacenet/simple_segmentation.py -a root_uri <root_uri> -a test True
+```
+
+where `<root_uri>` is a local RV root. Once you have run the test example and ensured that the experiment is setup correctly, you can run the full experiment with the following command:
+
+```
+rastervision run aws_batch -p spacenet/simple_segmentation.py -a <root_uri>
+```
+
+In this case `<root_uri>` should be a remote RV root.
+
+### Step 2: View results
+
+After the experiment has completed you can view the predictions in QGIS. 
+
+![Spacenet Vegas Buildings in QGIS](img/spacenet-vegas-buildings-qgis.jpg)
+
+You will also see an eval with similar results to the following:
+
+```json
+[
+    {
+        "class_id": 1,
+        "precision": 0.9166443308607926,
+        "recall": 0.7788752910479124,
+        "gt_count": 62924777,
+        "count_error": 31524.39656560088,
+        "class_name": "Building",
+        "f1": 0.8387483150445183
+    },
+    {
+        "class_id": 2,
+        "precision": 0.9480938442744736,
+        "recall": 0.9648479452702291,
+        "gt_count": 262400223,
+        "count_error": 29476.379317139523,
+        "class_name": "Background",
+        "f1": 0.9527945047747147
+    },
+    {
+        "class_id": null,
+        "precision": 0.942010839223173,
+        "recall": 0.9288768769691843,
+        "gt_count": 325325000,
+        "count_error": 29872.509429032507,
+        "class_name": "average",
+        "f1": 0.930735545099091
+    }
+]
+```
 
 ## Spacenet Rio Building Semantic Segmentation
 
