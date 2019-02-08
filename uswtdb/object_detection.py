@@ -54,7 +54,6 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
             raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
                 .with_uri(train_image_uri) \
                 .with_channel_order([0, 1, 2]) \
-                .with_stats_transformer() \
                 .build()
 
             label_source_uri = os.path.join(base_uri, label_dir, '{}.geojson'.format(id))
@@ -79,16 +78,12 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
                                   .with_validation_scenes(val_scenes) \
                                   .build()
 
-        analyzer = rv.AnalyzerConfig.builder(rv.STATS_ANALYZER) \
-                                    .build()
-    
         rn_experiment = rv.ExperimentConfig.builder() \
                                             .with_root_uri(root_uri) \
                                             .with_task(task) \
                                             .with_dataset(dataset) \
                                             .with_id('uswtdb-object-detection-resnet') \
                                             .with_backend(resnet) \
-                                            .with_analyzer(analyzer) \
                                             .build()
 
         return rn_experiment
