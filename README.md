@@ -6,11 +6,12 @@ Table of Contents:
 - [Setup and Requirements](#setup-and-requirements)
 - [Model Zoo](#model-zoo)
 - [SpaceNet Rio Building Chip Classification](#spacenet-rio-building-chip-classification)
+- [Spacenet Vegas Simple Segmentation](#spacenet-vegas-simple-semantic-segmentation)
+- [SpaceNet Rio Building Semantic Segmentation](#spacenet-rio-building-semantic-segmentation)
 - [Spacenet Vegas Roads and Buildings: All Tasks](#spacenet-vegas)
 - [ISPRS Potsdam Semantic Segmentation](#isprs-potsdam-semantic-segmentation)
 - [COWC Potsdam Car Object Detection](#cowc-potsdam-car-object-detection)
 - [xView Vehicle Object Detection](#xview-vehicle-object-detection)
-
 
 ## Setup and Requirements
 
@@ -45,8 +46,9 @@ This will mount the following directories:
 - `potsdam` -> `/opt/src/potsdam`
 - `xview` -> `/opt/src/xview`
 - `cowc` -> `/opt/src/cowc`
+- `other` -> `/opt/src/other` (This directory is useful for holding Git repos containing examples you want to use with this Docker container.)
 
-### "Developer Mode"
+### Debug Mode
 
 It can be helpful for debugging purposes to use a local copy of Raster Vision rather than the version baked into the default Docker image (the latest version on Quay). To do this, you can set the `RASTER_VISION_REPO` environment variable to the location of the Raster Vision repo on your local filesystem. If this is set, the `build` script will set the base image to `raster-vision-{cpu,gpu}`. The `console` script will also mount `$RASTER_VISION_REPO/rastervision` to `/opt/src/rastervision` inside the container. You can then set breakpoints in your local copy of Raster Vision in order to debug experiments run inside the container.
 
@@ -221,6 +223,103 @@ Viewing the validation scene results for scene ID `013022232023` looks like this
 
 ![QGIS results explorer](img/qgis-spacenet-cc.png)
 
+## Spacenet Vegas Simple Semantic Segmentation
+
+This is an example of a simple semantic segmentation task. It shows how to run an experiment to segment buildings using the [Spacenet Vegas](https://spacenetchallenge.github.io/AOI_Lists/AOI_2_Vegas.html) dataset. This experiment reads the data directly from S3 URIs.
+
+### Step 1: Run experiment
+
+This script includes an option to run a 'test' version of the experiment that is small enough to be run locally on a cpu. To do so, run
+
+```
+rastervision run local -p spacenet/simple_segmentation.py -a root_uri <root_uri> -a test True
+```
+
+where `<root_uri>` is a local RV root. Once you have run the test example and ensured that the experiment is setup correctly, you can run the full experiment with the following command:
+
+```
+rastervision run aws_batch -p spacenet/simple_segmentation.py -a <root_uri>
+```
+
+In this case `<root_uri>` should be a remote RV root.
+
+### Step 2: View results
+
+After the experiment has completed you can view the predictions in QGIS. 
+
+![Spacenet Vegas Buildings in QGIS](img/spacenet-vegas-buildings-qgis.jpg)
+
+You will also see an eval with similar results to the following:
+
+```json
+[
+    {
+        "class_id": 1,
+        "precision": 0.9166443308607926,
+        "recall": 0.7788752910479124,
+        "gt_count": 62924777,
+        "count_error": 31524.39656560088,
+        "class_name": "Building",
+        "f1": 0.8387483150445183
+    },
+    {
+        "class_id": 2,
+        "precision": 0.9480938442744736,
+        "recall": 0.9648479452702291,
+        "gt_count": 262400223,
+        "count_error": 29476.379317139523,
+        "class_name": "Background",
+        "f1": 0.9527945047747147
+    },
+    {
+        "class_id": null,
+        "precision": 0.942010839223173,
+        "recall": 0.9288768769691843,
+        "gt_count": 325325000,
+        "count_error": 29872.509429032507,
+        "class_name": "average",
+        "f1": 0.930735545099091
+    }
+]
+```
+
+## Spacenet Rio Building Semantic Segmentation
+
+An experiment to do semantic segmentation on Spacenet Rio is available [here](spacenet/rio_semantic_segmentation.py). A prerequisite is having run the [Rio Chip Classification](#spacenet-rio-building-chip-classification) Jupyter notebook. The results should look something like:
+
+![Spacenet Rio Building Semantic Segmentation](img/spacenet-rio-semseg.png)
+
+```
+"overall": [
+    {
+        "recall": 0.6933642097495366,
+        "precision": 0.7181072275154092,
+        "class_name": "Building",
+        "gt_count": 11480607,
+        "count_error": 119679.64457523893,
+        "f1": 0.7023217656506746,
+        "class_id": 1
+    },
+    {
+        "recall": 0.978149141560173,
+        "precision": 0.9763586125303796,
+        "class_name": "Background",
+        "gt_count": 147757124,
+        "count_error": 31820.188126279452,
+        "f1": 0.9771849696422493,
+        "class_id": 2
+    },
+    {
+        "recall": 0.9576169230896666,
+        "precision": 0.9577393905661922,
+        "class_name": "average",
+        "gt_count": 159237731,
+        "count_error": 38154.615804881076,
+        "f1": 0.9573680807430468,
+        "class_id": null
+    }
+]
+```
 
 ## Spacenet Vegas Roads and Buildings: All Tasks <a name="spacenet-vegas"></a>
 
