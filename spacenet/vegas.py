@@ -356,7 +356,6 @@ class SpacenetVegas(rv.ExperimentSet):
         spacenet_config = SpacenetConfig.create(use_remote_data, target)
         experiment_id = '{}_{}'.format(target, task_type.lower())
 
-        print(vector_tile_options)
         validate_options(task_type, target, vector_tile_options)
         vector_tile_options = VectorTileOptions.build(vector_tile_options)
 
