@@ -84,7 +84,7 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
                 label_dir, '{}{}.geojson'.format(label_fn_prefix, id))
             label_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
                 .with_vector_source(vector_source) \
-                .with_rasterizer_options(2, line_buffer=16) \
+                .with_rasterizer_options(2) \
                 .build()
 
             label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \

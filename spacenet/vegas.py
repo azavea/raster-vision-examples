@@ -102,7 +102,11 @@ def build_scene(task, spacenet_config, id, channel_order=None, vector_tile_optio
                       .build()
 
     if vector_tile_options is None:
-        vector_source = spacenet_config.get_geojson_uri(id)
+        label_uri = spacenet_config.get_geojson_uri(id)
+        vector_source = rv.VectorSourceConfig.builder(rv.GEOJSON_SOURCE) \
+            .with_uri(label_uri) \
+            .with_buffers(line_bufs={1: 15}) \
+            .build()
     else:
         options = vector_tile_options
         class_id_to_filter = spacenet_config.get_class_id_to_filter()
@@ -112,14 +116,14 @@ def build_scene(task, spacenet_config, id, channel_order=None, vector_tile_optio
             .with_uri(options.uri) \
             .with_zoom(options.zoom) \
             .with_id_field(options.id_field) \
+            .with_buffers(line_bufs={1: 15}) \
             .build()
 
     if task.task_type == rv.SEMANTIC_SEGMENTATION:
         background_class_id = 2
-        line_buffer = 15
         label_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
             .with_vector_source(vector_source) \
-            .with_rasterizer_options(background_class_id, line_buffer=line_buffer) \
+            .with_rasterizer_options(background_class_id) \
             .build()
 
         label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \
@@ -305,7 +309,7 @@ def validate_options(task_type, target, vector_tile_options):
         raise ValueError('{} is not a valid target'.format(target))
 
     if target == ROADS:
-        if task_type in [rv.CHIP_CLASSIFICATION, rv.OBJECT_DETECTION]:
+        if task_type in [rv.OBJECT_DETECTION]:
             raise ValueError('{} is not valid task_type for target="roads"'.format(
                 task_type))
 
@@ -356,7 +360,6 @@ class SpacenetVegas(rv.ExperimentSet):
         spacenet_config = SpacenetConfig.create(use_remote_data, target)
         experiment_id = '{}_{}'.format(target, task_type.lower())
 
-        print(vector_tile_options)
         validate_options(task_type, target, vector_tile_options)
         vector_tile_options = VectorTileOptions.build(vector_tile_options)
 
