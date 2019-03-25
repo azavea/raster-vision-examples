@@ -246,7 +246,6 @@ def build_backend(task, test):
                                   .with_task(task) \
                                   .with_model_defaults(rv.RESNET50_IMAGENET) \
                                   .with_debug(debug) \
-                                  .with_train_options(replace_model=True) \
                                   .with_batch_size(batch_size) \
                                   .with_num_epochs(num_epochs) \
                                   .with_config({

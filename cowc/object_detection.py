@@ -21,8 +21,6 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
         return rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
                                .with_task(task) \
                                .with_model_defaults(rv.SSD_MOBILENET_V1_COCO) \
-                               .with_train_options(do_monitoring=True,
-                                                   replace_model=True) \
                                .with_debug(True)
 
     def exp_cowc_local(self):
@@ -76,13 +74,13 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
 
         task = self.get_task()
 
-        backend =  self.get_backend_base(task) \
-                       .with_batch_size(8) \
-                       .with_num_steps(100000) \
-                       .build()
+        backend = self.get_backend_base(task) \
+                      .with_batch_size(8) \
+                      .with_num_steps(100000) \
+                      .build()
 
         def make_scene(id, label_uri):
-            img_uri  = '{}/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_{}_RGBIR.tif'.format(
+            img_uri = '{}/isprs-potsdam/4_Ortho_RGBIR/top_potsdam_{}_RGBIR.tif'.format(
                 root_uri, id)
 
             return rv.SceneConfig.builder() \
@@ -91,7 +89,6 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
                                  .with_raster_source(img_uri, channel_order=[0,1,2]) \
                                  .with_label_source(label_uri) \
                                  .build()
-
 
         train_label_uri = '{}/labels/train.json'.format(root_uri)
         train_scenes = list(map(lambda id: make_scene(id, train_label_uri),

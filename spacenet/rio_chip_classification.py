@@ -46,7 +46,6 @@ class ChipClassificationExperiments(rv.ExperimentSet):
                                   .with_task(task) \
                                   .with_model_defaults(rv.RESNET50_IMAGENET) \
                                   .with_debug(True) \
-                                  .with_train_options(replace_model=True) \
                                   .with_batch_size(16) \
                                   .with_num_epochs(40) \
                                   .with_config({
