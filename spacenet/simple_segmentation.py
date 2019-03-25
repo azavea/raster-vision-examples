@@ -74,7 +74,7 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
             train_image_uri = os.path.join(base_uri, raster_dir,
                                            '{}{}.tif'.format(raster_fn_prefix, id))
 
-            raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+            raster_source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
                 .with_uri(train_image_uri) \
                 .with_channel_order([0, 1, 2]) \
                 .with_stats_transformer() \

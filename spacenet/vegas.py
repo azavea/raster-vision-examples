@@ -95,7 +95,7 @@ class VegasBuildings(SpacenetConfig):
 
 def build_scene(task, spacenet_config, id, channel_order=None, vector_tile_options=None):
     # Need to use stats_transformer because imagery is uint16.
-    raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+    raster_source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
                       .with_uri(spacenet_config.get_raster_source_uri(id)) \
                       .with_channel_order(channel_order) \
                       .with_stats_transformer() \
