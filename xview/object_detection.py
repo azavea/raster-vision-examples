@@ -50,9 +50,7 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
                                     .with_task(task) \
                                     .with_debug(True) \
                                     .with_batch_size(16) \
-                                    .with_num_steps(NUM_STEPS) \
-                                    .with_train_options(do_monitoring=True,
-                                                        replace_model=True)
+                                    .with_num_steps(NUM_STEPS)
 
         mobilenet = backend_base \
                     .with_model_defaults(rv.SSD_MOBILENET_V1_COCO) \
