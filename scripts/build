@@ -22,7 +22,7 @@ then
     then
         if [ -z "$RASTER_VISION_REPO" ]
         then
-            BASE_IMAGE="quay.io/azavea/raster-vision:cpu-0.8"
+            BASE_IMAGE="quay.io/azavea/raster-vision:cpu-latest"
         else
             BASE_IMAGE="raster-vision-cpu"
         fi
@@ -33,7 +33,7 @@ then
     then
         if [ -z "$RASTER_VISION_REPO" ]
         then
-            BASE_IMAGE="quay.io/azavea/raster-vision:gpu-0.8"
+            BASE_IMAGE="quay.io/azavea/raster-vision:gpu-latest"
         else
             BASE_IMAGE="raster-vision-gpu"
         fi
