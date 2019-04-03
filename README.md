@@ -1,182 +1,154 @@
-# Raster Vision Example Repository
+# Raster Vision Examples
 
-This repository holds examples for Raster Vision usage on open datasets.
+This repository contains examples of using Raster Vision on open datasets.
 
 Table of Contents:
 - [Setup and Requirements](#setup-and-requirements)
+- [How to Run an Example](#how-to-run-an-example)
+    - [SpaceNet Rio Building Chip Classification (demonstrates data prep)](#spacenet-rio-building-chip-classification)
+- [Other examples](#other-examples)
+    - [SpaceNet Rio Building Semantic Segmentation](#spacenet-rio-building-semantic-segmentation)
+    - [SpaceNet Vegas](#spacenet-vegas)
+        - [Simple Segmentation (easy to run and understand)](#spacenet-vegas-simple-semantic-segmentation)
+        - [Roads and Buildings (demonstrates multiple tasks, line string, class filter, vector tiles, polygon output)](#spacenet-vegas-roads-and-buildings)
+        - [Hyperparameter Search (demonstrates branching experiment structure)](#spacenet-vegas-hyperparameter-search)
+    - [ISPRS Potsdam Semantic Segmentation (demonstrates RGB input/output, multiple classes)](#isprs-potsdam-semantic-segmentation)
+    - [COWC Potsdam Car Object Detection](#cowc-potsdam-car-object-detection)
+    - [xView Vehicle Object Detection (demonstrates data prep)](#xview-vehicle-object-detection)
 - [Model Zoo](#model-zoo)
-- [SpaceNet Rio Building Chip Classification](#spacenet-rio-building-chip-classification)
-- [Spacenet Vegas Simple Segmentation](#spacenet-vegas-simple-semantic-segmentation)
-- [SpaceNet Rio Building Semantic Segmentation](#spacenet-rio-building-semantic-segmentation)
-- [Spacenet Vegas Roads and Buildings: All Tasks](#spacenet-vegas)
-- [ISPRS Potsdam Semantic Segmentation](#isprs-potsdam-semantic-segmentation)
-- [COWC Potsdam Car Object Detection](#cowc-potsdam-car-object-detection)
-- [xView Vehicle Object Detection](#xview-vehicle-object-detection)
 
 ## Setup and Requirements
 
-### Requirements
-
-You'll need `docker` (preferably version 18 or above) installed.
-
-### Setup
-
-To build the examples container, run the following command:
+### Docker
+You'll need `docker` (preferably version 18 or above) installed. To build the Docker images, run the following command:
 
 ```shell
-> scripts/build
+> docker/build
 ```
 
-This will pull down the latest `raster-vision` docker and add some of this repo's code to it.
-
-### Running the console
-
-Whenever the instructions say to "run the console", it means to spin up an image and drop into a bash shell by doing this:
-
+This will pull down the latest `raster-vision:cpu-latest` and `raster-vision:gpu-latest` Docker images and add some of this repo's code to them. Before running the container, set an environment variable to a local directory in which to store data.
 ```shell
-> scripts/console
+> export RASTER_VISION_DATA_DIR="/path/to/data"
 ```
+To run a Bash console in the Docker container, invoke:
+```shell
+> docker/run
+```
+This will mount the following local directories to directories inside the container:
+* `$RASTER_VISION_DATA_DIR -> /opt/data/`
+* `examples/ -> /opt/src/examples/`
 
-This will mount the following directories:
-- `${HOME}/.aws` -> `/root/.aws`
-- `${HOME}/.rastervision` -> `/root/.rastervision`
-- `notebooks` -> `/opt/notebooks`
-- `data` -> `/opt/data`
-- `spacenet` -> `/opt/src/spacenet`
-- `potsdam` -> `/opt/src/potsdam`
-- `xview` -> `/opt/src/xview`
-- `cowc` -> `/opt/src/cowc`
-- `other` -> `/opt/src/other` (This directory is useful for holding Git repos containing examples you want to use with this Docker container.)
+This script also has options for forwarding AWS credentials (`--aws`), running JupyterHub (`--jupyter`), running on a GPU (`--gpu`), and others which can be seen below.
+
+```
+> ./docker/run --help
+Usage: run <options> <command>
+Run a console in the raster-vision-examples-cpu Docker image locally.
+
+Environment variables:
+RASTER_VISION_DATA_DIR (directory for storing data; mounted to /opt/data)
+AWS_PROFILE (optional AWS profile)
+RASTER_VISION_REPO (optional path to main RV repo; mounted to /opt/src)
+
+Options:
+--aws forwards AWS credentials (sets AWS_PROFILE env var and mounts ~/.aws to /root/.aws)
+--tensorboard maps port 6006
+--gpu use the NVIDIA runtime and GPU image
+--name sets the name of the running container
+--jupyter forwards port 8888, mounts ./notebooks to /opt/notebooks, and runs Jupyter
+
+All arguments after above options are passed to 'docker run'.
+```
 
 ### Debug Mode
 
-It can be helpful for debugging purposes to use a local copy of Raster Vision rather than the version baked into the default Docker image (the latest version on Quay). To do this, you can set the `RASTER_VISION_REPO` environment variable to the location of the Raster Vision repo on your local filesystem. If this is set, the `build` script will set the base image to `raster-vision-{cpu,gpu}`. The `console` script will also mount `$RASTER_VISION_REPO/rastervision` to `/opt/src/rastervision` inside the container. You can then set breakpoints in your local copy of Raster Vision in order to debug experiments run inside the container.
+For debugging, it can be helpful to use a local copy of the Raster Vision source code rather than the version baked into the default Docker image. To do this, you can set the `RASTER_VISION_REPO` environment variable to the location of the main repo on your local filesystem. If this is set, `docker/build` will set the base image to `raster-vision-{cpu,gpu}`, and `docker/run` will mount `$RASTER_VISION_REPO/rastervision` to `/opt/src/rastervision` inside the container. You can then set breakpoints in your local copy of Raster Vision in order to debug experiments running inside the container.
 
-In addition, if you would like to mount a custom data directory on your local filesystem into the container, you can set the `RASTER_VISION_DATA_DIR` environment variable before running the `console` script.
+## How to Run an Example
 
-### Running Raster Vision
+There is a common structure across all of the examples which represents a best practice for defining experiments. Running an example involves the following steps.
 
-Each example will at some point run the `rastervision` command line. See `rastervision --help` and `rastervision run --help` for usage information.
+* Acquire raw dataset.
+* (Optional) Generate processed dataset which is derived from the raw dataset using a Jupyter notebook, or download the processed dataset.
+* (Optional) Do an abbreviated test run of the experiment on a small subset of data locally.
+* Run full experiment on GPU.
+* Inspect output
+* (Optional) Make predictions on new imagery
 
-Use `-a` to pass arguments into the experiment methods; many of which take a `root_uri`, which is where Raster Vision will store all the output of the experiment. If you forget to supply this, Raster Vision will remind you.
+Each of the [experiments](examples/) has several parameters that can be set on the command line:
+* The input data for each experiment is divided into two directories: the raw data which is publicly distributed, and the processed data which is derived from the raw data by pre-processing scripts. These two directories are set using the `raw_uri` and `processed_uri` parameters.
+* The output generated by the experiment is stored in the directory set by the  `root_uri` parameter.
+* The `raw_uri`, `processed_uri`, and `root_uri` can each be local or remote (on S3), and don't need to agree on whether they are local or remote.
+* Experiments have a `test_run` parameter which runs an abbreviated experiment for testing/debugging purposes.
 
-Using the `-n` or `--dry-run` flag is useful to see what you're about to run before you run it.
-Combine this with the verbose flag for different levels of output:
+In the next section, we describe in detail how to run one of the examples, SpaceNet Rio Chip Classification. For other examples, we only briefly note any example-specific details.
 
+### SpaceNet Rio Building Chip Classification
+
+This example performs chip classification to detect buildings on the Rio AOI of the [SpaceNet](https://spacenetchallenge.github.io/) dataset.
+
+#### Step 1: Acquire Raw Dataset
+
+The dataset is stored on AWS S3 at `s3://spacenet-dataset`. You will need an AWS account to access this dataset, but it will not be charged for accessing it. (To forward you AWS credentials into the container, use `docker/run --aws`).
+
+Optional: to run this example with the data stored locally, first copy the data using something like the following inside the container.
 ```
-> rastervision run spacenet.rio_chip_classification -a root_uri s3://example/ --dry_run
-> rastervision -v run spacenet.rio_chip_classification -a root_uri s3://example/ --dry_run
-> rastervision -vv run spacenet.rio_chip_classification -a root_uri s3://example/ --dry_run
+aws s3 sync s3://spacenet-dataset/AOI_1_Rio/ /opt/data/spacenet-dataset/AOI_1_Rio/
 ```
 
-Use `-x` to avoid checking if files exist, which can take a long time for large experiments.
-This is useful to do the first run, but if you haven't changed anything about the experiment and
-are sure the files are there, it's often nice to skip that step.
+#### Step 2: Run the Jupyter Notebook
 
-### Running Jupyter
-
-Whenever intructions say to "run jupyter", it means to run the JupyterHub instance through docker by doing:
+You'll need to do some data preprocessing, which we can do in the Jupyter notebook supplied.
 
 ```shell
-> scripts/jupyter
+> docker/run --jupyter [--aws]
 ```
 
-This mounts many of the same directories as `scripts/consle`. The terminal output will give you the URL to go to in order to use JupyterHub.
+The `--aws` option is only needed if pulling data from S3. In JupyterHub inside the browser, navigate to the [spacenet/spacenet_rio_chip_classification_data_prep.ipynb](notebooks/spacenet/spacenet_rio_chip_classification_data_prep.ipynb) notebook. Set the URIs in the first cell and then run the rest of the notebook.
 
-### Running against AWS
+#### Step 3: Do a test run locally
 
-If you want to run code against AWS, you'll have to have a Raster Vision AWS Batch setup
-on your account, which you can accomplish through the [Raster Vision AWS repository](https://github.com/azavea/raster-vision-aws).
-
-Make sure to set the appropriate configuration in your `$HOME/.rastervision/default` configuration, e.g.
-
-```ini
-[AWS_BATCH]
-job_queue=rasterVisionQueueStaging
-job_definition=raster-vision-gpu
-```
-
-### QGIS Plugin
-
-We can inspect results quickly by installing the [QGIS plugin](https://github.com/azavea/raster-vision-qgis). This is an optional step, and requires QGIS 3. See that repository's README for more installation instructions.
-
-### Viewing Tensorboard
-
-During the training step of experiments that have backends that support
-[Tensorboard](https://github.com/tensorflow/tensorboard), you should be able to view Tensorboard
-at either `localhost:6006/` if you are running locally, or `<public_dns>:6006` if you are running
-on AWS, where `<public_dns>` is the pulbic DNS of the instance that is running the training job.
-
-## Model Zoo
-
-| Dataset | Task | Model | Prediction Package | Sample Image | Model (for fine-tuning) |
-| --- | --- | --- | --- | --- | --- |
-| Spacenet Rio Buildings | Chip Classification | Resnet50 | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/rio-cc/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/rio-cc/013022223130_sample.tif) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/rio-cc/model-weights.hdf5) |
-| Spacenet Vegas Buildings | Semantic Segmentation | Mobilenet | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg/1929.tif) | n/a |
-| Spacenet Vegas Roads | Semantic Segmentation | Mobilenet | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-road-seg/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-road-seg/524.tif) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-road-seg/roads-mobilenet.tar.gz) |
-| ISPRS Potsdam | Semantic Segmentation | Mobilenet | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/potsdam-seg/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/potsdam-seg/3_12_sample.tif) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/potsdam-seg/model.tar.gz) |
-| COWC Potsdam (Cars) | Object Detection | Mobilenet | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/cowc-od/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/cowc-od/3_10_sample.tif) | n/a |
-| xView Vehicle | Object Detection | Mobilenet | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/xview-vehicle-od/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/xview-vehicle-od/1677.tif) | n/a |
-
-Using the Model Zoo, you can download prediction packages which contain pre-trained models and configuration, and then run them on sample test images that the model wasn't trained on.
+The experiment we want to run is in [examples/spacenet/rio/chip_classification.py](examples/spacenet/rio/chip_classification.py). To run this, first get to the Docker console using:
 
 ```shell
-> rastervision predict <predict_package> <infile> <outfile>
+> docker/run [--aws] [--gpu] [--tensorboard]
 ```
 
-It shouldn't take more than a minute on a CPU to make predictions for each sample. For some of the examples, there are also model files that can be used for fine-tuning on another dataset.
+The `--aws` option is only needed if running experiments on AWS or using data stored on S3. The `--gpu` option should only be used if running on a local GPU.
+The `--tensorboard` option should be used if running locally and you would like to view Tensorboard. The test run can be executed using something like:
 
-**Disclaimer**: These models are provided for testing and demonstration purposes and aren't particularly accurate. As is usually the case for deep learning models, the accuracy drops greatly when used on input that is outside the training distribution. In other words, a model trained in one city probably won't work well in another city (unless they are very similar) or at a different imagery resolution.
-
-## Spacenet Rio Building Chip Classification
-
-This example performs chip classification to detect buildings in the [SpaceNet](https://spacenetchallenge.github.io/) imagery.
-It is set up to train on the Rio dataset.
-
-### Step 1: Run the Jupyter Notebook
-
-You'll need to do some data preprocessing, which we can do in the jupyter notebook supplied.
-
-Run jupyter and navigate to the `spacenet/SpaceNet - Rio - Chip Classification Data Prep` notebook.
-
-Run through this notebook (instructions are included).
-
-![Jupyter Notebook](img/jupyter-spacenet-cc.png)
-
-### Step 2: Run Raster Vision
-
-The experiment we want to run is in `spacenet/rio_chip_classification.py`.
-
-To run this, get into the docker container by typing:
-
+```shell
+export RAW_URI="s3://spacenet-dataset/"
+export PROCESSED_URI="s3://mybucket/examples/spacenet/rio/processed-data"
+export ROOT_URI="s3://mybucket/examples/spacenet/rio/remote-output"
+rastervision run local -e examples.spacenet.rio.chip_classification \
+    -a raw_uri $RAW_URI -a processed_uri $PROCESSED_URI -a root_uri $ROOT_URI \
+    -a test_run True --splits 2
 ```
-> scripts/console
-```
+This assumes that the input data is on S3, and the output should be saved to S3. It's also possible to use local URIs. This runs two parallel jobs for the `chip` and `predict` via `--splits 2`. See `rastervision --help` and `rastervision run --help` for more usage information.
 
-You'll need to pass the experiment an S3 URI that you have write access to, that will serve as a place to store results and configuration - this is what we call the _RV root_. You can pass arguments to experiment methods via the `-a KEY VALUE` command line option.
+After running this, the main thing to check is that it didn't crash, and that the debug chips look correct. The debug chips can be found in the zip files in `$ROOT_URI/chip/spacenet-rio-chip-classification/`.
 
-If you are running locally (which means you're running this against a GPU machine with a good connection), run:
+#### Step 4: Run full experiment
 
-```
-> rastervision run local -e spacenet.rio_chip_classification -a root_uri ${RVROOT}
+To run the full experiment on GPUs using AWS Batch, use something like:
+
+```shell
+export RAW_URI="s3://spacenet-dataset/"
+export PROCESSED_URI="s3://mybucket/examples/spacenet/rio/processed-data"
+export ROOT_URI="s3://mybucket/examples/spacenet/rio/remote-output"
+rastervision run aws_batch -e examples.spacenet.rio.chip_classification \
+    -a raw_uri $RAW_URI -a processed_uri $PROCESSED_URI -a root_uri $ROOT_URI \
+    -a test_run False --splits 8
 ```
 
-If you are running on AWS Batch, run:
-```
-> rastervision run aws_batch -e spacenet.chip_classification -a root_uri ${RVROOT}
-```
+For instructions on setting up AWS Batch resources and configuring Raster Vision to use them, see [AWS Batch Setup](https://docs.rastervision.io/en/latest/setup.html#aws-batch-setup). To monitor the training process using Tensorboard, visit `<public dns>:6006` for the EC2 instance running the training job.
 
-where `${RVROOT}` is your RV root, for instance `s3://raster-vision-rob-dev/spacenet/cc`
+If you would like to run on a local GPU, replace `aws_batch` with `local`, and use local URIs. To monitor the training process using Tensorboard, visit `localhost:6006`, assuming you used `docker/run --tensorboard`.
 
-Your console output should look something like this if you are running against AWS:
+#### Step 5: Inspect results
 
-![Spacenet Chip Classification Console Output](img/spacenet-cc-console-output.png)
-
-### Step 3: Inspect Evaluation results
-
-After everything completes, which should take about 3 hours if you're running on AWS with p3.2xlarges,
-you should be able to find the `eval/spacenet-rio-chip-classification/eval.json` evaluation
-JSON. This is an example of the scores from a run:
+After everything completes, which should take about 3 hours if you're running on AWS using a `p3.2xlarge` instance for training, you should be able to find the predictions over the validation scenes in `$root_uri/predict/spacenet-rio-chip-classification/`. The evaluation metrics can be found in `$root_uri/eval/spacenet-rio-chip-classification/eval.json`. This is an example of the score from a run, which show an F1 score of `0.96` for detecting chips with buildings.
 
 ```javascript
 [
@@ -210,46 +182,78 @@ JSON. This is an example of the scores from a run:
 ]
 ```
 
-Which shows us an f1 score of `0.96` for detecting chips with buildings, and an average f1 of `0.97`.
-
-### Step 4: View results through QGIS plugin
-
-Those numbers look good, but seeing the imagery and predictions on a map will look better.
-To do this, we utilize the QGIS plugin to pull down one of the validation images.
-
-A walkthrough of using QGIS to inspect these results can be found [in the QGIS plugin README](https://github.com/azavea/raster-vision-qgis#tutorial-view-spacenet-building-chip-classification)
-
-Viewing the validation scene results for scene ID `013022232023` looks like this:
+Optional: To see validation scene images and predictions on a map, we can utilize the [QGIS plugin](https://github.com/azavea/raster-vision-qgis).
+A walkthrough of using QGIS to inspect these results can be found [in the QGIS plugin README](https://github.com/azavea/raster-vision-qgis#tutorial-view-spacenet-building-chip-classification). Viewing the validation scene results for scene ID `013022232023` looks like this:
 
 ![QGIS results explorer](img/qgis-spacenet-cc.png)
 
-## Spacenet Vegas Simple Semantic Segmentation
+#### Step 6: Predict on new imagery
 
-This is an example of a simple semantic segmentation task. It shows how to run an experiment to segment buildings using the [Spacenet Vegas](https://spacenetchallenge.github.io/AOI_Lists/AOI_2_Vegas.html) dataset. This experiment reads the data directly from S3 URIs.
+After running an experiment, a *predict package* is saved into `$root_uri/bundle/spacenet-rio-chip-classification/`. This can be used to make predictions on new images. See the [Model Zoo](#model-zoo) section for more details.
 
-### Step 1: Run experiment
+## Other Examples
 
-This script includes an option to run a 'test' version of the experiment that is small enough to be run locally on a cpu. To do so, run
+### SpaceNet Rio Building Semantic Segmentation
 
+This [experiment](examples/spacenet/rio/semantic_segmentation.py) trains a semantic segmentation model to find buildings using the [SpaceNet Rio](https://spacenetchallenge.github.io/AOI_Lists/AOI_1_Rio.html) dataset. A prerequisite is running the [Rio Chip Classification](#spacenet-rio-building-chip-classification) Jupyter notebook, and all other details are the same as that example.
+
+Below are sample predictions and eval metrics.
+
+![SpaceNet Rio Building Semantic Segmentation](img/spacenet-rio-semseg.png)
+
+<details><summary>Eval Metrics</summary>
+
+```json
+"overall": [
+    {
+        "recall": 0.6933642097495366,
+        "precision": 0.7181072275154092,
+        "class_name": "Building",
+        "gt_count": 11480607,
+        "count_error": 119679.64457523893,
+        "f1": 0.7023217656506746,
+        "class_id": 1
+    },
+    {
+        "recall": 0.978149141560173,
+        "precision": 0.9763586125303796,
+        "class_name": "Background",
+        "gt_count": 147757124,
+        "count_error": 31820.188126279452,
+        "f1": 0.9771849696422493,
+        "class_id": 2
+    },
+    {
+        "recall": 0.9576169230896666,
+        "precision": 0.9577393905661922,
+        "class_name": "average",
+        "gt_count": 159237731,
+        "count_error": 38154.615804881076,
+        "f1": 0.9573680807430468,
+        "class_id": null
+    }
+]
 ```
-rastervision run local -p spacenet/simple_segmentation.py -a root_uri <root_uri> -a test True
-```
 
-where `<root_uri>` is a local RV root. Once you have run the test example and ensured that the experiment is setup correctly, you can run the full experiment with the following command:
+</details>
 
-```
-rastervision run aws_batch -p spacenet/simple_segmentation.py -a <root_uri>
-```
+### SpaceNet Vegas
 
-In this case `<root_uri>` should be a remote RV root.
+This is a collection of examples using the [SpaceNet Vegas](https://spacenetchallenge.github.io/AOI_Lists/AOI_2_Vegas.html) dataset.
 
-### Step 2: View results
+#### SpaceNet Vegas Simple Semantic Segmentation
 
-After the experiment has completed you can view the predictions in QGIS. 
+This [experiment](examples/spacenet/vegas/simple_segmentation.py) is a simple example of doing semantic segmentation: the code is simple, there is no need to pre-process any data, and you don't need permission to use the data.
 
-![Spacenet Vegas Buildings in QGIS](img/spacenet-vegas-buildings-qgis.jpg)
+Details:
+* The `raw_uri` should be set to the root of the SpaceNet data repository, which is at `s3://spacenet-dataset`, or a local copy of it. A copy only needs to contain the `SpaceNet_Buildings_Dataset_Round2/spacenetV2_Train/AOI_2_Vegas` subdirectory.
+* There is no `processed_uri` parameter because there is no processed data
 
-You will also see an eval with similar results to the following:
+Below are sample predictions and eval metrics.
+
+![SpaceNet Vegas Buildings in QGIS](img/spacenet-vegas-buildings-qgis.jpg)
+
+<details><summary>Eval Metrics</summary>
 
 ```json
 [
@@ -283,90 +287,27 @@ You will also see an eval with similar results to the following:
 ]
 ```
 
-## Spacenet Rio Building Semantic Segmentation
+</details>
 
-An experiment to do semantic segmentation on Spacenet Rio is available [here](spacenet/rio_semantic_segmentation.py). A prerequisite is having run the [Rio Chip Classification](#spacenet-rio-building-chip-classification) Jupyter notebook. The results should look something like:
+#### SpaceNet Vegas Roads and Buildings
 
-![Spacenet Rio Building Semantic Segmentation](img/spacenet-rio-semseg.png)
+This [experiment](examples/spacenet/vegas/all.py) can be configured to do any of the three tasks on either roads or buildings. It is an example of how to structure experiment code to support a variety of options. It also demonstrates how to utilize line strings as labels for roads using buffering, and generating polygon output for semantic segmentation on buildings.
 
-```
-"overall": [
-    {
-        "recall": 0.6933642097495366,
-        "precision": 0.7181072275154092,
-        "class_name": "Building",
-        "gt_count": 11480607,
-        "count_error": 119679.64457523893,
-        "f1": 0.7023217656506746,
-        "class_id": 1
-    },
-    {
-        "recall": 0.978149141560173,
-        "precision": 0.9763586125303796,
-        "class_name": "Background",
-        "gt_count": 147757124,
-        "count_error": 31820.188126279452,
-        "f1": 0.9771849696422493,
-        "class_id": 2
-    },
-    {
-        "recall": 0.9576169230896666,
-        "precision": 0.9577393905661922,
-        "class_name": "average",
-        "gt_count": 159237731,
-        "count_error": 38154.615804881076,
-        "f1": 0.9573680807430468,
-        "class_id": null
-    }
-]
-```
+Details:
+* The `raw_uri` should be set to the root of the SpaceNet data repository, which is at `s3://spacenet-dataset`, or a local copy of it. For buildings, a copy only needs to contain the `SpaceNet_Buildings_Dataset_Round2/spacenetV2_Train/AOI_2_Vegas` subdirectory.
+For roads, `SpaceNet_Roads_Competition/Train/AOI_2_Vegas_Roads_Train`.
+* There is no `processed_uri` parameter because there is no processed data.
+* There are two additional parameters:
+    - `task_type` can be set to `chip_classification`, `object_detection`, or `semantic_segmentation`.
+    - `target` can be `buildings` or `roads`
+* Note that for semantic segmentation on buildings, polygon output in the form of GeoJSON files will be saved to the `predict` directory alongside the GeoTIFF files. In addition, a vector evaluation file using SpaceNet metrics will be saved to the `eval` directory.
+* Running semantic segmentation on roads trains a Mobilenet for 100k steps which takes about 6hrs on a P3 instance.
 
-## Spacenet Vegas Roads and Buildings: All Tasks <a name="spacenet-vegas"></a>
-
-This example shows how to run an experiment on the [Spacenet Vegas](https://spacenetchallenge.github.io/AOI_Lists/AOI_2_Vegas.html) dataset with the option to choose either roads or buildings, and use any task.
-
-### (Optional) Step 1: Download data
-
-You can run this example both remotely and locally without having to manually download the dataset, as Raster Vision can utilize S3 URIs directly. However, if you want to use locally cached data, you can download and unzip the following files to the data directory: `s3://spacenet-dataset/AOI_2_Vegas/AOI_2_Vegas_Train.tar.gz` (for buildings) and `spacenet-dataset/SpaceNet_Roads_Competition/AOI_2_Vegas_Roads_Train.tar.gz` (for roads).
-
-### Step 2: Run experiment
-
-To run a small experiment locally to test that things are setup properly, invoke
-```
-rastervision run local -e spacenet.vegas \
-    -a test True \
-    -a root_uri <root_uri> \
-    -a target <target> \
-    -a task_type <task_type>
-```
-where:
-* `<root_uri>` is your local RV root, for instance `/opt/data/spacenet-vegas`
-* `<target>` can be either `roads` or `buildings`.
-* `<task_type>` can be `semantic_segmentation`, `object_detection`, or `chip_classification`. However, only `semantic_segmentation` currently works with `roads`.
-
-If you would like to use data stored locally during Step 1, add the `-a use_remote_data False` flag.
-
-To run a full experiment remotely, invoke
-```
-rastervision run aws_batch -e spacenet.vegas \
-    -a test True \
-    -a root_uri <root_uri> \
-    -a target <target> \
-    -a task_type <task_type>
-```
-with a remote `<root_uri>`.
-
-Running semantic segmentation on roads trains a Mobilenet for 100k steps which takes about 6hrs on a P3 instance.
-
-#### Experimental: Use vector tiles to get labels
-
-It is possible to use vector tiles as a source of labels in the form of a `{z}/{x}/{y}` schema. We have tested this with a set of vector tiles created from Open Street Map (OSM). Note that most buildings and some roads present in the Spacenet labels are not present in the OSM data. If you are not using OSM, you might need to change the `class_id_to_filter` values in the experiment configuration. Each `class_id_to_filter` is a mapping from `class_id` to a Mapbox GL filter which is to used to assign class ids to features based on their `properties` field. To use vector tiles instead of GeoJSON, run the experiment with the following flag: `-a vector_tile_options "<uri>,<zoom>,<id_field>"`. See the vector tile docs for the develop branch [here](https://docs.rastervision.io/en/latest/api.html#rv-vector-tile-source) for a description of these parameters.
-
-### Step 3: View results
-
-After training a semantic segmentation model on roads, using the QGIS plugin, you should see predictions and an eval similar to the following.
+Sample predictions and eval metrics can be seen below.
 
 ![Spacenet Vegas Roads in QGIS](img/spacenet-vegas-roads-qgis.png)
+
+<details><summary>Eval Metrics</summary>
 
 ```json
 [
@@ -400,32 +341,30 @@ After training a semantic segmentation model on roads, using the QGIS plugin, yo
 ]
 ```
 
-## Spacenet Vegas Hyperparameter Tuning Example ##
+</details>
 
-This example is based on the Las Vegas buildings semantic segmentation example described above.
+##### Variant: Use vector tiles to get labels
 
-In this example, we run several related experiments, allowing the base learning rate to vary over them.
-These experiments are all related, in that they all work over the same dataset (the Las Vegas buildings data), and in fact the `analyze` and `chip` stages are shared between all of the experiments.
-That sharing of early stages is achieving by making sure that the `chip_key` and `analyze_key` are [the same for all of the experiments](spacenet/hyperparameters.py#L80-L81) so that rastervision can detect the redundancy.
+It is possible to use vector tiles as a source of labels in the form of a `{z}/{x}/{y}` schema. We have tested this with a set of vector tiles created from Open Street Map (OSM). Note that most buildings and some roads present in the SpaceNet labels are not present in the OSM data.
 
-To run the experiments on AWS batch type something like:
+To use vector tiles instead of GeoJSON, run the experiment with the following flag: `-a vector_tile_options "<uri>,<zoom>,<id_field>"`. See the [vector tile docs(https://docs.rastervision.io/en/latest/api.html#rv-vector-tile-source) for a description of these parameters.
 
-```bash
-rastervision run aws_batch \
-	     -e spacenet.hyperparameters \
-	     -a use_remote_data True \
-	     -a root_uri s3://my-bucket/vegas-hyperparameters \
-	     -a learning_rates '0.0001,0.001,0.002,0.003,0.004,0.005,0.10'
-	     -x
-```
+If you are not using OSM, you might need to change the `class_id_to_filter` values in the experiment configuration. Each `class_id_to_filter` is a mapping from `class_id` to a Mapbox GL filter which is to used to assign class ids to features based on their `properties` field.
 
-Typing that will train DeepLab models over the Las Vegas buildings dataset with respective base learning rates of 0.0001, 0.001, 0.002, 0.003, 0.004, 0.005, and 0.10.
-The number of steps is 10,000 for all experiments.
-Because this is for demonstration purposes only, the training dataset has been reduced to only 128 scenes.
+#### SpaceNet Vegas Hyperparameter Search
 
-The f1 scores for buildings as a function of base learning rate are shown below.
+This [experiment set](examples/spacenet/vegas/hyperparameters.py) runs several related experiments in which the base learning rate varies over them. These experiments are all related, in that they all work over the same dataset (SpaceNet Vegas buildings), and in fact the `analyze` and `chip` stages are shared between all of the experiments.
+That sharing of early stages is achieving by making sure that the `chip_key` and `analyze_key` are [the same for all of the experiments](examples/spacenet/vegas/hyperparameters.py#L80-L81) so that Raster Vision can detect the redundancy.
 
-| Base Learning Rate  | Building f1 Score  |
+Details:
+* The `raw_uri` should be set to the root of the SpaceNet data repository, which is at `s3://spacenet-dataset`, or a local copy of it. A copy only needs to contain the `SpaceNet_Buildings_Dataset_Round2/spacenetV2_Train/AOI_2_Vegas` subdirectory.
+* There is no `processed_uri` parameter because there is no processed data.
+* There is an additional `learning_rates` parameters which is a comma-delimited list of learning rates to use for the experiments. Example: `-a learning_rates '0.0001,0.001,0.002,0.003,0.004,0.005,0.10'`
+* The number of steps is 10,000 for all experiments. Because this is for demonstration purposes only, the training dataset has been reduced to only 128 scenes.
+
+The F1 scores for buildings as a function of base learning rate are shown below.
+
+| Base Learning Rate  | Building F1 Score  |
 | ------------------- | ------------------ |
 | 0.0001              | 0.7337961752864327 |
 | 0.001               | 0.7616993477580662 |
@@ -435,51 +374,23 @@ The f1 scores for buildings as a function of base learning rate are shown below.
 | 0.005               | 0.5070458576486434 |
 | 0.1                 | 0.5046626369613472 |
 
-The overall f1 scores as a function of base learning rate are shown below.
+Disclaimer: We are not claiming that the numbers above are useful or interesting, the sole intent here is demonstrate how to vary hyperparameters using Raster Vision.
 
-| Base Learning Rate  | Overall f1 Score   |
-| ------------------- | ------------------- |
-| 0.0001              | 0.8593602075530826  |
-| 0.001               | 0.8714577760700831  |
-| 0.002               | 0.8874310574766863  |
-| 0.003               | 0.876330712364558   |
-| 0.004               | 0.495666977640978   |
-| 0.005               | 0.23329045862436176 |
-| 0.1                 | 0.2383655704809608  |
+### ISPRS Potsdam Semantic Segmentation
 
-(Disclaimer: We are not claiming that the numbers above are useful or interesting, the sole intent here is demonstrate how to vary hyperparameters using rastervision.)
+This [experiment](examples/potsdam/semantic_segmentation.py) performs semantic segmentation on the [ISPRS Potsdam dataset](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html). The dataset consists of 5cm aerial imagery over Potsdam, Germany, segmented into six classes including building, tree, low vegetation, impervious, car, and clutter. For more info see our [blog post](https://www.azavea.com/blog/2017/05/30/deep-learning-on-aerial-imagery/).
 
-The code can be found [here](spacenet/hyperparameters.py).
+Details:
+* The dataset can only be downloaded after filling in this [request form](http://www2.isprs.org/commissions/comm3/wg4/data-request-form2.html). After your request is granted, follow the link to 'POTSDAM 2D LABELING' and download and unzip `4_Ortho_RGBIR.zip`, and `5_Labels_for_participants.zip` into a directory, and then upload to S3 if desired.
+* The `raw_uri` should point to the directory created in the above step. It should contain `4_Ortho_RGBIR` and `5_Labels_for_participants` subdirectories.
+* There is no `processed_uri` parameter since there is no processed data.
+* The full experiment runs a Mobilenet using the Tensorflow Deeplab backend for 100k steps, which takes about six hours to train on an AWS P3 instance.
 
-## ISPRS Potsdam Semantic Segmentation
+Below are sample predictions and eval metrics.
 
-This example performs semantic segmentation on the [ISPRS Potsdam dataset](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html). The dataset consists of 5cm aerial imagery over Potsdam, Germany, segmented into six classes including building, tree, low vegetation, impervious, car, and clutter. For more info see our [blog post](https://www.azavea.com/blog/2017/05/30/deep-learning-on-aerial-imagery/).
+![Potsdam segmentation predictions](img/potsdam-seg-predictions.png)
 
-### Step 1: Download the dataset
-
-The dataset can only be downloaded after filling in this [request form](http://www2.isprs.org/commissions/comm3/wg4/data-request-form2.html). After your request is granted, follow the link to 'POTSDAM 2D LABELING' and download and unzip `1_DSM_normalisation.zip`, `4_Ortho_RGBIR.zip`, and `5_Labels_for_participants.zip` into `data/`.
-
-### Step 2: Run experiment
-
-The experiment we want to run is in `potsdam/semantic_segmentation.py`. This runs a Mobilenet using the Tensorflow Deeplab backend for 100k steps, which takes about six hours to train on an AWS P3 instance.
-
-To do a small test run locally to check that things are setup properly, invoke
-```
-> rastervision run local -e potsdam.semantic_segmentation \
-    -a test_run True -a root_uri ${ROOT_URI} -a data_uri ${DATA_URI}
-```
-This only trains the model for one step, so the predictions will be random.
-
-To run a full experiment on AWS Batch, upload the data to S3, set `ROOT_URI` and `DATA_URI` to S3 URIs, and invoke
-```
-> rastervision run aws_batch -e potsdam.semantic_segmentation \
-    -a root_uri ${ROOT_URI} -a data_uri ${DATA_URI}
-```
-
-### Step 3: View results in QGIS plugin
-
-After running for around 6 hours on a P3 instance, you have evaluation metrics and predictions that
-look like:
+<details><summary>Eval Metrics</summary>
 
 ```javascript
 [
@@ -549,129 +460,52 @@ look like:
 ]
 ```
 
-![Potsdam segmentation predictions](img/potsdam-seg-predictions.png)
+</details>
 
+### COWC Potsdam Car Object Detection
 
-## COWC Potsdam Car Object Detection
+This [experiment](examples/cowc/object_detection.py) performs object detection on cars with the [Cars Overhead With Context](https://gdo152.llnl.gov/cowc/) dataset over Potsdam, Germany.
 
-This example performs object detection on cars with the Cars Overhead With Context dataset over Potsdam, Germany.
+Details:
+* The imagery can only be downloaded after filling in this [request form](http://www2.isprs.org/commissions/comm3/wg4/data-request-form2.html). After your request is granted, follow the link to 'POTSDAM 2D LABELING' and download and unzip `4_Ortho_RGBIR.zip` into a directory, and then upload to S3 if desired. (This step uses the same imagery as [ISPRS Potsdam Semantic Segmentation](#isprs-potsdam-semantic-segmentation))
+* The `raw_uri` should point to the directory created in the above step. It should contain an `4_Ortho_RGBIR` subdirectory.
+* Download the [processed labels](https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-labels.zip) and unzip. These files were generated from the [COWC car detection dataset](https://gdo152.llnl.gov/cowc/) using scripts in [cowc.data](cowc/data/). TODO: make a Jupyter notebook showing how to process the raw labels.
+* The `processed_uri` should point to the labels directory created above. It should contain a `labels/all` subdirectory.
 
-### Small local test case
+todo:
+* sample predictions and eval metrics
 
-#### Step 1: Download data
+### xView Vehicle Object Detection
 
-Download and unzip the [test data](https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-test.zip) to data/cowc/potsdam-local. These are cropped GeoTIFFs and labels that are a small subset of the full dataset.
+This [experiment](examples/xview/object_detection.py) performs object detection to find vehicles using the [DIUx xView Detection Challenge](http://xviewdataset.org/) dataset.
 
-Inside the docker container:
+Details:
+* Sign up for an account for the [DIUx xView Detection Challenge](http://xviewdataset.org/). Navigate to the [downloads page](https://challenge.xviewdataset.org/download-links) and download the zipped training images and labels. Unzip both of these files and place their contents in a directory, and upload to S3 if desired.
+* The `raw_uri` should point to this directory and contain a labels GeoJSON file named `xView_train.geojson` and a directory named `train_images`.
+* Run the [xview-vehicles-data-prep.ipynb](notebooks/xview/xview-vehicles-data-prep.ipynb) Jupyter notebook, passing in the `raw_uri` from above in the first cell.
+* The `processed_uri` should point to the processed data generated by the notebook.
 
-```console
-> mkdir -p /opt/data/cowc/potsdam-local
-> wget -O /opt/data/cowc/potsdam-local/data.zip https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-test.zip
-> unzip /opt/data/cowc/potsdam-local/data.zip -d /opt/data/cowc/potsdam-local/
+todo:
+* sample predictions and eval metrics
+
+## Model Zoo
+
+Using the Model Zoo, you can download prediction packages which contain pre-trained models and configuration, and then run them on sample test images that the model wasn't trained on.
+
+```shell
+> rastervision predict <predict_package> <infile> <outfile>
 ```
 
-#### Step 2: Run the experiment
+Note that the input file is assumed to have the same channel order and statistics as the images the model was trained on. See `rastervision predict --help` to see options for manually overriding these. It shouldn't take more than a minute on a CPU to make predictions for each sample. For some of the examples, there are also model files that can be used for fine-tuning on another dataset.
 
-Inside the docker container, run:
+**Disclaimer**: These models are provided for testing and demonstration purposes and aren't particularly accurate. As is usually the case for deep learning models, the accuracy drops greatly when used on input that is outside the training distribution. In other words, a model trained in one city probably won't work well in another city (unless they are very similar) or at a different imagery resolution.
 
-```
-> rastervision run local -e cowc.object_detection -m *local
-```
 
-You can visit https://localhost:6006/ to view tensorboard as the model trains.
-
-Since this is a local test, you shouldn't expect to see good results -
-this was simply a runthrough to show how to train a model locally.
-
-### Running a larger test on the full dataset
-
-The follow describes how to run against a larger set of data.
-
-#### Step 1: Get the data
-
-To run the larger set, follow these steps. Replace `${ROOT_URI}` with the directory that will be passed
-into the experiment as `root_uri`, which can be local if you're running on a GPU machine or S3.
-
-* In order to run this section, you'll need to get some data from ISPRS.
-Download the [ISPRS Potsdam](http://www2.isprs.org/commissions/comm3/wg4/2d-sem-label-potsdam.html) imagery using the [data request form](http://www2.isprs.org/commissions/comm3/wg4/data-request-form2.html) and place it in `${ROOT_URI}/isprs-potsdam`.
-* Copy the [cowc-potsdam labels](https://github.com/azavea/raster-vision-data/releases/download/v0.0.1/cowc-potsdam-labels.zip), unzip, and place the files in `${ROOT_URI}/labels/`. These files were generated from the [COWC car detection dataset](https://gdo152.llnl.gov/cowc/) using scripts in [cowc.data](cowc/data/).
-
-#### Step 2: Run the experiment
-
-Inside the docer container, run
-
-```console
-> rastervision run local -e cowc.object_detection -f *full -a root_uri ${ROOT_URI}
-```
-
-### See predictions in QGIS
-
-After the model is trained, we can use the "predict package" to make predictions
-in QGIS via the QGIS plugin.
-
-#### Step 1: Find the prediction package
-
-This should be at `${ROOT_URI}/bundle/cowc-object-detection-full/predict_package.zip`
-
-#### Step 2: Load up the local image in QGIS
-
-Load up a project in QGIS that has one of the local sample images at
-`data/cowc/potsdam-local/cowc-potsdam-test`
-
-![QGIS loaded with potsdam image](img/cowc-potsdam-local-qgis-load.png)
-
-#### Step 3: Predict
-
-Use the Predict dialog and set your predict package URI to the URI from Step 1.
-
-![QGIS Predict dialog](img/cowc-potsdam-local-qgis-predict-dialog.png)
-
-After spinning a bit the predictions should look something like this:
-
-![QGIS Predictions](img/cowc-potsdam-local-qgis-predictions.png)
-
-## xView Vehicle Object Detection
-
-This example performs object detection to detect vehicles in the xView imagery.
-It includes two experiments - one with the smaller [Mobilenet V1](https://github.com/tensorflow/models/blob/5fd32ef62e37a8124bf8849f7bea65fbd8cd7bdd/research/slim/nets/mobilenet_v1.md), and
-the other uses a [Faster RCNN utilizning a by RESNET50](https://arxiv.org/abs/1506.01497).
-
-You can either model or both; if you run both, you'll see an example of how a larger network
-performs with a significant amount of training data vs a smaller network.
-
-### Step 1: Download the Data
-
-Sign up for an account for the [DIUx xView Detection Challenge](http://xviewdataset.org/). Navigate to the [downloads page](https://challenge.xviewdataset.org/download-links) and download the zipped training images and labels.  Unzip both of these files and upload their contents to an s3 bucket that you have read/write access to. Once this is done, the bucket should contain a labels geojson called `xView_train.geojson` and a directory called `train_images`. You will use the uri to this dataset as input to the data prep Jupyter Notebook in step 2.
-
-### Step 2: Run the Jupyter Notebook
-
-You'll need to do some data preprocessing, which we can do in the jupyter notebook supplied.
-
-Run jupyter and navigate to the `xview/xView - Vehicles - Object Detection Data Prep` notebook.
-
-Run through this notebook (instructions are included).
-
-![Jupyter Notebook](img/jupyter-xview-cc.png)
-
-### Step 3: Run the experiment(s)
-
-To run the mobilenet experiment, inside the docker container run
-
-```
-> rastervision run ${RUNNER} -e xview.object_detection -f *mobilenet* -a root_uri ${ROOT_URI} -a data_uri ${DATA_URI}
-```
-
-To run the resnet experiment, run
-
-```
-> rastervision run ${RUNNER} -e xview.object_detection -f *resnet* -a root_uri ${ROOT_URI} -a data_uri ${DATA_URI}
-```
-
-and to run both, simply
-
-```
-> rastervision run ${RUNNER} -e xview.object_detection -a root_uri ${ROOT_URI} -a data_uri ${DATA_URI}
-```
-
-where `${ROOT_URI}` is the URI set up in jupyter notebook, and ${RUNNER} is
-the type of runner you are using, e.g. `local` or `aws_batch`.
+| Dataset | Task | Model | Prediction Package | Sample Image | Model (for fine-tuning) |
+| --- | --- | --- | --- | --- | --- |
+| SpaceNet Rio Buildings | Chip Classification | Resnet50 | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/rio-cc/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/rio-cc/013022223130_sample.tif) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/rio-cc/model-weights.hdf5) |
+| SpaceNet Vegas Buildings | Semantic Segmentation | Mobilenet | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg/1929.tif) | n/a |
+| SpaceNet Vegas Roads | Semantic Segmentation | Mobilenet | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-road-seg/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-road-seg/524.tif) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-road-seg/roads-mobilenet.tar.gz) |
+| ISPRS Potsdam | Semantic Segmentation | Mobilenet | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/potsdam-seg/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/potsdam-seg/3_12_sample.tif) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/potsdam-seg/model.tar.gz) |
+| COWC Potsdam (Cars) | Object Detection | Mobilenet | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/cowc-od/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/cowc-od/3_10_sample.tif) | n/a |
+| xView Vehicle | Object Detection | Mobilenet | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/xview-vehicle-od/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/xview-vehicle-od/1677.tif) | n/a |
