@@ -5,34 +5,37 @@ from abc import abstractmethod
 
 import rastervision as rv
 from rastervision.utils.files import list_paths
-
+from examples.utils import str_to_bool
 
 BUILDINGS = 'buildings'
 ROADS = 'roads'
 
 
 class SpacenetConfig(object):
+    def __init__(self, raw_uri):
+        self.raw_uri = raw_uri
+
     @staticmethod
-    def create(use_remote_data, target):
+    def create(raw_uri, target):
         if target.lower() == BUILDINGS:
-            return VegasBuildings(use_remote_data)
+            return VegasBuildings(raw_uri)
         elif target.lower() == ROADS:
-            return VegasRoads(use_remote_data)
+            return VegasRoads(raw_uri)
         else:
             raise ValueError('{} is not a valid target.'.format(target))
 
     def get_raster_source_uri(self, id):
         return os.path.join(
-            self.base_uri, self.raster_dir,
+            self.raw_uri, self.base_dir, self.raster_dir,
             '{}{}.tif'.format(self.raster_fn_prefix, id))
 
     def get_geojson_uri(self, id):
         return os.path.join(
-            self.base_uri, self.label_dir,
+            self.raw_uri, self.base_dir, self.label_dir,
             '{}{}.geojson'.format(self.label_fn_prefix, id))
 
     def get_scene_ids(self):
-        label_dir = os.path.join(self.base_uri, self.label_dir)
+        label_dir = os.path.join(self.raw_uri, self.base_dir, self.label_dir)
         label_paths = list_paths(label_dir, ext='.geojson')
         label_re = re.compile(r'.*{}(\d+)\.geojson'.format(self.label_fn_prefix))
         scene_ids = [
@@ -50,15 +53,13 @@ class SpacenetConfig(object):
 
 
 class VegasRoads(SpacenetConfig):
-    def __init__(self, use_remote_data):
-        self.base_uri = '/opt/data/AOI_2_Vegas_Roads_Train'
-        if use_remote_data:
-            self.base_uri = 's3://spacenet-dataset/SpaceNet_Roads_Competition/Train/AOI_2_Vegas_Roads_Train'  # noqa
-
+    def __init__(self, raw_uri):
+        self.base_dir = 'SpaceNet_Roads_Competition/Train/AOI_2_Vegas_Roads_Train'
         self.raster_dir = 'RGB-PanSharpen'
         self.label_dir = 'geojson/spacenetroads'
         self.raster_fn_prefix = 'RGB-PanSharpen_AOI_2_Vegas_img'
         self.label_fn_prefix = 'spacenetroads_AOI_2_Vegas_img'
+        super().__init__(raw_uri)
 
     def get_class_map(self):
         # First class should be background when using GeoJSONRasterSource
@@ -72,15 +73,13 @@ class VegasRoads(SpacenetConfig):
 
 
 class VegasBuildings(SpacenetConfig):
-    def __init__(self, use_remote_data):
-        self.base_uri = '/opt/data/AOI_2_Vegas_Train'
-        if use_remote_data:
-            self.base_uri = 's3://spacenet-dataset/SpaceNet_Buildings_Dataset_Round2/spacenetV2_Train/AOI_2_Vegas'  # noqa
-
+    def __init__(self, raw_uri):
+        self.base_dir = 'SpaceNet_Buildings_Dataset_Round2/spacenetV2_Train/AOI_2_Vegas'
         self.raster_dir = 'RGB-PanSharpen'
         self.label_dir = 'geojson/buildings'
         self.raster_fn_prefix = 'RGB-PanSharpen_AOI_2_Vegas_img'
         self.label_fn_prefix = 'buildings_AOI_2_Vegas_img'
+        super().__init__(raw_uri)
 
     def get_class_map(self):
         # First class should be background when using GeoJSONRasterSource
@@ -100,7 +99,9 @@ def build_scene(task, spacenet_config, id, channel_order=None, vector_tile_optio
                       .with_channel_order(channel_order) \
                       .with_stats_transformer() \
                       .build()
+    label_store = None
 
+    # Set a line buffer to convert line strings to polygons.
     if vector_tile_options is None:
         label_uri = spacenet_config.get_geojson_uri(id)
         vector_source = rv.VectorSourceConfig.builder(rv.GEOJSON_SOURCE) \
@@ -129,6 +130,14 @@ def build_scene(task, spacenet_config, id, channel_order=None, vector_tile_optio
         label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \
             .with_raster_source(label_raster_source) \
             .build()
+
+        # Generate polygon output for segmented buildings.
+        if isinstance(spacenet_config, VegasBuildings):
+            vector_output = {'mode': 'polygons', 'class_id': 1, 'denoise': 3}
+            label_store = rv.LabelStoreConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
+                                             .with_vector_output([vector_output]) \
+                                             .build()
+
     elif task.task_type == rv.CHIP_CLASSIFICATION:
         label_source = rv.LabelSourceConfig.builder(rv.CHIP_CLASSIFICATION) \
                                            .with_vector_source(vector_source) \
@@ -148,17 +157,22 @@ def build_scene(task, spacenet_config, id, channel_order=None, vector_tile_optio
                           .with_id(id) \
                           .with_raster_source(raster_source) \
                           .with_label_source(label_source) \
+                          .with_label_store(label_store) \
                           .build()
 
     return scene
 
 
-def build_dataset(task, spacenet_config, test, vector_tile_options=None):
+def build_dataset(task, spacenet_config, test_run, vector_tile_options=None):
     scene_ids = spacenet_config.get_scene_ids()
     if len(scene_ids) == 0:
         raise ValueError('No scenes found. Something is configured incorrectly.')
     random.seed(5678)
+    scene_ids = sorted(scene_ids)
     random.shuffle(scene_ids)
+    # Workaround to handle scene 1000 missing on S3.
+    if '1000' in scene_ids:
+        scene_ids.remove('1000')
     split_ratio = 0.8
     num_train_ids = round(len(scene_ids) * split_ratio)
     train_ids = scene_ids[0:num_train_ids]
@@ -166,7 +180,7 @@ def build_dataset(task, spacenet_config, test, vector_tile_options=None):
 
     num_train_scenes = len(train_ids)
     num_val_scenes = len(val_ids)
-    if test:
+    if test_run:
         num_train_scenes = 16
         num_val_scenes = 4
     train_ids = train_ids[0:num_train_scenes]
@@ -216,15 +230,15 @@ def build_task(task_type, class_map):
     return task
 
 
-def build_backend(task, test):
+def build_backend(task, test_run):
     debug = False
-    if test:
+    if test_run:
         debug = True
 
     if task.task_type == rv.SEMANTIC_SEGMENTATION:
         batch_size = 8
         num_steps = 1e5
-        if test:
+        if test_run:
             num_steps = 1
             batch_size = 1
 
@@ -238,7 +252,7 @@ def build_backend(task, test):
     elif task.task_type == rv.CHIP_CLASSIFICATION:
         batch_size = 8
         num_epochs = 40
-        if test:
+        if test_run:
             num_epochs = 1
             batch_size = 1
 
@@ -249,21 +263,21 @@ def build_backend(task, test):
                                   .with_batch_size(batch_size) \
                                   .with_num_epochs(num_epochs) \
                                   .with_config({
-                                      "trainer": {
-                                          "options": {
-                                              "saveBest": True,
-                                              "lrSchedule": [
+                                      'trainer': {
+                                          'options': {
+                                              'saveBest': True,
+                                              'lrSchedule': [
                                                   {
-                                                      "epoch": 0,
-                                                      "lr": 0.0005
+                                                      'epoch': 0,
+                                                      'lr': 0.0005
                                                   },
                                                   {
-                                                      "epoch": 15,
-                                                      "lr": 0.0001
+                                                      'epoch': 15,
+                                                      'lr': 0.0001
                                                   },
                                                   {
-                                                      "epoch": 30,
-                                                      "lr": 0.00001
+                                                      'epoch': 30,
+                                                      'lr': 0.00001
                                                   }
                                               ]
                                           }
@@ -273,7 +287,7 @@ def build_backend(task, test):
     elif task.task_type == rv.OBJECT_DETECTION:
         batch_size = 8
         num_steps = 1e5
-        if test:
+        if test_run:
             num_steps = 1
             batch_size = 1
 
@@ -299,7 +313,7 @@ def str_to_bool(x):
     return x
 
 
-def validate_options(task_type, target, vector_tile_options):
+def validate_options(task_type, target, vector_tile_options=None):
     if task_type not in [rv.SEMANTIC_SEGMENTATION, rv.CHIP_CLASSIFICATION,
                          rv.OBJECT_DETECTION]:
         raise ValueError('{} is not a valid task_type'.format(task_type))
@@ -334,44 +348,42 @@ class VectorTileOptions():
 
 
 class SpacenetVegas(rv.ExperimentSet):
-    def exp_main(self, root_uri, target=BUILDINGS, use_remote_data=True, test=False,
-                 task_type=rv.SEMANTIC_SEGMENTATION, vector_tile_options=None):
+    def exp_main(self, raw_uri, root_uri, test_run=False,
+                 target=BUILDINGS, task_type=rv.SEMANTIC_SEGMENTATION,
+                 vector_tile_options=None):
         """Run an experiment on the Spacenet Vegas road or building dataset.
 
         This is an example of how to do all three tasks on the same dataset.
 
         Args:
-            root_uri: (str): root of where to put output
+            raw_uri: (str) directory of raw data (the root of the Spacenet dataset)
+            root_uri: (str) root directory for experiment output
+            test_run: (bool) if True, run a very small experiment as a test and generate
+                debug output
             target: (str) 'buildings' or 'roads'
-            use_remote_data: (bool or str) if True or 'True', then use data from S3,
-                else local
-            test: (bool or str) if True or 'True', run a very small experiment as a
-                test and generate debug output
-            task_type: (str) valid options are semantic_segmentation, object_detection,
-                and chip_classification
+            task_type: (str) 'semantic_segmentation', 'object_detection', or
+                'chip_classification'
             vector_tile_options: (str or None) space delimited list of uri, zoom, and
                 id_field. See VectorTileVectorSourceConfigBuilder.with_uri, .with_zoom
                 and .with_id_field methods for more details.
         """
-        test = str_to_bool(test)
+        test_run = str_to_bool(test_run)
+        exp_id = '{}-{}'.format(target, task_type.lower())
         task_type = task_type.upper()
-        use_remote_data = str_to_bool(use_remote_data)
-        spacenet_config = SpacenetConfig.create(use_remote_data, target)
-        experiment_id = '{}_{}'.format(target, task_type.lower())
-
+        spacenet_config = SpacenetConfig.create(raw_uri, target)
         validate_options(task_type, target, vector_tile_options)
         vector_tile_options = VectorTileOptions.build(vector_tile_options)
 
         task = build_task(task_type, spacenet_config.get_class_map())
-        backend = build_backend(task, test)
+        backend = build_backend(task, test_run)
         analyzer = rv.AnalyzerConfig.builder(rv.STATS_ANALYZER) \
                                     .build()
-        dataset = build_dataset(task, spacenet_config, test,
+        dataset = build_dataset(task, spacenet_config, test_run,
                                 vector_tile_options=vector_tile_options)
 
         # Need to use stats_analyzer because imagery is uint16.
         experiment = rv.ExperimentConfig.builder() \
-                                        .with_id(experiment_id) \
+                                        .with_id(exp_id) \
                                         .with_task(task) \
                                         .with_backend(backend) \
                                         .with_analyzer(analyzer) \

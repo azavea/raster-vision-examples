@@ -1,0 +1,113 @@
+import os
+from os.path import join
+
+import rastervision as rv
+from examples.utils import get_scene_info, str_to_bool
+
+aoi_path = 'srcData/buildingLabels/Rio_OUTLINE_Public_AOI.geojson'
+
+
+class SemanticSegmentationExperiments(rv.ExperimentSet):
+    def exp_main(self, raw_uri, processed_uri, root_uri, test_run=False):
+        """Semantic segmentation experiment on Spacenet Rio dataset.
+
+        Run the data prep notebook before running this experiment. Note all URIs can be
+        local or remote.
+
+        Args:
+            raw_uri: (str) directory of raw data
+            processed_uri: (str) directory of processed data
+            root_uri: (str) root directory for experiment output
+            test_run: (bool) if True, run a very small experiment as a test and generate
+                debug output
+        """
+        test_run = str_to_bool(test_run)
+        exp_id = 'spacenet-rio-semseg'
+        debug = False
+        batch_size = 8
+        num_steps = 150000
+        model_type = rv.MOBILENET_V2
+
+        train_scene_info = get_scene_info(join(processed_uri, 'train-scenes.csv'))
+        val_scene_info = get_scene_info(join(processed_uri, 'val-scenes.csv'))
+
+        if test_run:
+            exp_id += '-test'
+            debug = True
+            num_steps = 1
+            batch_size = 1
+            train_scene_info = train_scene_info[0:1]
+            val_scene_info = val_scene_info[0:1]
+
+        class_map = {
+            'Building': (1, 'orange'),
+            'Background': (2, 'black')
+        }
+
+        task = rv.TaskConfig.builder(rv.SEMANTIC_SEGMENTATION) \
+                            .with_chip_size(300) \
+                            .with_classes(class_map) \
+                            .with_chip_options(
+                                stride=300,
+                                window_method='sliding',
+                                debug_chip_probability=0.25) \
+                            .build()
+
+        backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
+                                  .with_task(task) \
+                                  .with_model_defaults(model_type) \
+                                  .with_config({
+                                    'min_scale_factor': '0.75',
+                                    'max_scale_factor': '1.25'},
+                                    ignore_missing_keys=True, set_missing_keys=True) \
+                                  .with_train_options(sync_interval=600) \
+                                  .with_num_steps(num_steps) \
+                                  .with_batch_size(batch_size) \
+                                  .with_debug(debug) \
+                                  .build()
+
+        def make_scene(scene_info):
+            (raster_uri, label_uri) = scene_info
+            raster_uri = join(raw_uri, raster_uri)
+            label_uri = join(processed_uri, label_uri)
+            aoi_uri = join(raw_uri, aoi_path)
+            id = os.path.splitext(os.path.basename(raster_uri))[0]
+
+            background_class_id = 2
+            label_raster_source = rv.RasterSourceConfig.builder(rv.RASTERIZED_SOURCE) \
+                .with_vector_source(label_uri) \
+                .with_rasterizer_options(background_class_id) \
+                .build()
+            label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \
+                .with_raster_source(label_raster_source) \
+                .build()
+
+            return rv.SceneConfig.builder() \
+                                 .with_task(task) \
+                                 .with_id(id) \
+                                 .with_raster_source(raster_uri) \
+                                 .with_label_source(label_source) \
+                                 .with_aoi_uri(aoi_uri) \
+                                 .build()
+
+        train_scenes = [make_scene(info) for info in train_scene_info]
+        val_scenes = [make_scene(info) for info in val_scene_info]
+
+        dataset = rv.DatasetConfig.builder() \
+                                  .with_train_scenes(train_scenes) \
+                                  .with_validation_scenes(val_scenes) \
+                                  .build()
+
+        experiment = rv.ExperimentConfig.builder() \
+                                        .with_id(exp_id) \
+                                        .with_root_uri(root_uri) \
+                                        .with_task(task) \
+                                        .with_backend(backend) \
+                                        .with_dataset(dataset) \
+                                        .build()
+
+        return experiment
+
+
+if __name__ == '__main__':
+    rv.main()

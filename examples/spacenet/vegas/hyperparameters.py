@@ -1,22 +1,23 @@
 import os
 
 import rastervision as rv
-from spacenet.vegas import (SpacenetConfig, build_dataset, build_task,
-                            str_to_bool, validate_options, BUILDINGS)
+from examples.spacenet.vegas.all import (
+    SpacenetConfig, build_dataset, build_task, validate_options, BUILDINGS)
+from examples.utils import str_to_bool
 
 
-def build_backend(task, test, learning_rate):
-    if test:
+def build_backend(task, test_run, learning_rate):
+    if test_run:
         debug = True
     else:
         debug = False
 
-    if not test:
-        batch_size = 12
-        num_steps = 1e5
-    else:
+    if test_run:
         num_steps = 1
         batch_size = 1
+    else:
+        batch_size = 12
+        num_steps = 1e5
 
     rate_dict = {'baseLearningRate': str(learning_rate)}
     backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
@@ -32,25 +33,26 @@ def build_backend(task, test, learning_rate):
 
 
 class HyperParameterSearch(rv.ExperimentSet):
-    def exp_main(self, root_uri, use_remote_data=True, test=False, learning_rates='0.001'):
-        """Run an experiment on the Spacenet Vegas building dataset.
+    def exp_main(self, raw_uri, root_uri, test_run=False, learning_rates='0.001'):
+        """Run a hyper-parameter search experiment on Spacenet Vegas.
+
+        Generates an experiment for each learning rate using a TF Deeplab semantic
+        segmentation backend on the Spacenet Vegas Buildings dataset.
 
         Args:
-            root_uri: (str): root of where to put output
-            use_remote_data: (bool or str) if True or 'True', then use
-                data from S3, else local
-            test: (bool or str) if True or 'True', run a very small
-                experiment as a test and generate debug output
-
+            raw_uri: (str) directory of raw data (the root of the Spacenet dataset)
+            root_uri: (str) root directory for experiment output
+            test_run: (bool) if True, run a very small experiment as a test and
+                generate debug output
+            learning_rates: (str) comma-delimited list of learning rates to use
         """
+        test_run = str_to_bool(test_run)
         target = BUILDINGS
         task_type = rv.SEMANTIC_SEGMENTATION
         learning_rates = learning_rates.split(',')
 
-        test = str_to_bool(test)
         task_type = task_type.upper()
-        use_remote_data = str_to_bool(use_remote_data)
-        spacenet_config = SpacenetConfig.create(use_remote_data, target)
+        spacenet_config = SpacenetConfig.create(raw_uri, target)
         ac_key = '{}_{}'.format(target, task_type.lower())
 
         validate_options(task_type, target)
@@ -58,20 +60,22 @@ class HyperParameterSearch(rv.ExperimentSet):
         task = build_task(task_type, spacenet_config.get_class_map())
         analyzer = rv.AnalyzerConfig.builder(rv.STATS_ANALYZER) \
                                     .build()
-        dataset = build_dataset(task, spacenet_config, test)
+        dataset = build_dataset(task, spacenet_config, test_run)
 
         # Reduce number of scenes
         dataset.train_scenes = dataset.train_scenes[0:2**7]
 
         exps = []
         for learning_rate in learning_rates:
-            backend = build_backend(task, test, learning_rate)
-            experiment_id = '{}_{}_rate={}'.format(target, task_type.lower(),
-                                                   learning_rate)
+            backend = build_backend(task, test_run, learning_rate)
+            exp_id = '{}_{}_rate={}'.format(target, task_type.lower(),
+                                            learning_rate)
 
             # Need to use stats_analyzer because imagery is uint16.
+            # Set the analyze and chip key to share analyze and chip output
+            # between the experiments.
             experiment = rv.ExperimentConfig.builder() \
-                                            .with_id(experiment_id) \
+                                            .with_id(exp_id) \
                                             .with_task(task) \
                                             .with_backend(backend) \
                                             .with_analyzer(analyzer) \
