@@ -1,83 +1,44 @@
 import os
+from os.path import join
 
 import rastervision as rv
-
-
-def build_scene(task, data_uri, id, channel_order=None):
-    id = id.replace('-', '_')
-    raster_source_uri = '{}/4_Ortho_RGBIR/top_potsdam_{}_RGBIR.tif'.format(
-        data_uri, id)
-
-    label_source_uri = '{}/5_Labels_for_participants/top_potsdam_{}_label.tif'.format(
-        data_uri, id)
-
-    # Using with_rgb_class_map because input TIFFs have classes encoded as RGB colors.
-    label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
-        .with_rgb_class_map(task.class_map) \
-        .with_raster_source(label_source_uri) \
-        .build()
-
-    # URI will be injected by scene config.
-    # Using with_rgb(True) because we want prediction TIFFs to be in RGB format.
-    label_store = rv.LabelStoreConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
-        .with_rgb(True) \
-        .build()
-
-    scene = rv.SceneConfig.builder() \
-                          .with_task(task) \
-                          .with_id(id) \
-                          .with_raster_source(raster_source_uri,
-                                              channel_order=channel_order) \
-                          .with_label_source(label_source) \
-                          .with_label_store(label_store) \
-                          .build()
-
-    return scene
+from examples.utils import str_to_bool, save_image_crop
 
 
 class PotsdamSemanticSegmentation(rv.ExperimentSet):
-    def exp_main(self, root_uri, data_uri, test_run=False):
+    def exp_main(self, raw_uri, processed_uri, root_uri, test=False):
         """Run an experiment on the ISPRS Potsdam dataset.
 
         Uses Tensorflow Deeplab backend with Mobilenet architecture. Should get to
-        F1 score of ~0.86 (including clutter class) after 6 hours of training on P3
+        F1 score of ~0.86 (including clutter class) after 6 hours of training on a P3
         instance.
 
         Args:
+            raw_uri: (str) directory of raw data
             root_uri: (str) root directory for experiment output
-            data_uri: (str) root directory of Potsdam dataset
-            test_run: (bool) if True, run a very small experiment as a test and generate
+            test: (bool) if True, run a very small experiment as a test and generate
                 debug output
         """
-        if test_run == 'True':
-            test_run = True
-        elif test_run == 'False':
-            test_run = False
-
+        test = str_to_bool(test)
+        exp_id = 'potsdam-seg'
         train_ids = ['2-10', '2-11', '3-10', '3-11', '4-10', '4-11', '4-12', '5-10',
                      '5-11', '5-12', '6-10', '6-11', '6-7', '6-9', '7-10', '7-11',
                      '7-12', '7-7', '7-8', '7-9']
         val_ids = ['2-12', '3-12', '6-12']
         # infrared, red, green
         channel_order = [3, 0, 1]
-
         debug = False
         batch_size = 8
-        chips_per_scene = 500
         num_steps = 100000
         model_type = rv.MOBILENET_V2
 
-        # Better results can be obtained at a greater computational expense using
-        # num_steps = 150000
-        # model_type = rv.XCEPTION_65
-
-        if test_run:
+        if test:
             debug = True
             num_steps = 1
             batch_size = 1
-            chips_per_scene = 50
             train_ids = train_ids[0:1]
             val_ids = val_ids[0:1]
+            exp_id += '-test'
 
         classes = {
             'Car': (1, '#ffff00'),
@@ -89,12 +50,10 @@ class PotsdamSemanticSegmentation(rv.ExperimentSet):
         }
 
         task = rv.TaskConfig.builder(rv.SEMANTIC_SEGMENTATION) \
-                            .with_chip_size(256) \
+                            .with_chip_size(300) \
                             .with_classes(classes) \
-                            .with_chip_options(
-                                chips_per_scene=chips_per_scene,
-                                debug_chip_probability=0.2,
-                                negative_survival_probability=1.0) \
+                            .with_chip_options(window_method='sliding',
+                                               stride=300, debug_chip_probability=1.0) \
                             .build()
 
         backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
@@ -106,10 +65,45 @@ class PotsdamSemanticSegmentation(rv.ExperimentSet):
                                   .with_debug(debug) \
                                   .build()
 
-        train_scenes = [build_scene(task, data_uri, id, channel_order)
-                        for id in train_ids]
-        val_scenes = [build_scene(task, data_uri, id, channel_order)
-                      for id in val_ids]
+        def make_scene(id):
+            id = id.replace('-', '_')
+            raster_uri = '{}/4_Ortho_RGBIR/top_potsdam_{}_RGBIR.tif'.format(
+                raw_uri, id)
+
+            label_uri = '{}/5_Labels_for_participants/top_potsdam_{}_label.tif'.format(
+                raw_uri, id)
+
+            if test:
+                crop_uri = join(
+                    processed_uri, 'crops', os.path.basename(raster_uri))
+                save_image_crop(raster_uri, crop_uri, size=600)
+                raster_uri = crop_uri
+
+            # Using with_rgb_class_map because label TIFFs have classes encoded as RGB colors.
+            label_source = rv.LabelSourceConfig.builder(rv.SEMANTIC_SEGMENTATION) \
+                .with_rgb_class_map(task.class_map) \
+                .with_raster_source(label_uri) \
+                .build()
+
+            # URI will be injected by scene config.
+            # Using with_rgb(True) because we want prediction TIFFs to be in RGB format.
+            label_store = rv.LabelStoreConfig.builder(rv.SEMANTIC_SEGMENTATION_RASTER) \
+                .with_rgb(True) \
+                .build()
+
+            scene = rv.SceneConfig.builder() \
+                                  .with_task(task) \
+                                  .with_id(id) \
+                                  .with_raster_source(raster_uri,
+                                                      channel_order=channel_order) \
+                                  .with_label_source(label_source) \
+                                  .with_label_store(label_store) \
+                                  .build()
+
+            return scene
+
+        train_scenes = [make_scene(id) for id in train_ids]
+        val_scenes = [make_scene(id) for id in val_ids]
 
         dataset = rv.DatasetConfig.builder() \
                                   .with_train_scenes(train_scenes) \
@@ -117,7 +111,7 @@ class PotsdamSemanticSegmentation(rv.ExperimentSet):
                                   .build()
 
         experiment = rv.ExperimentConfig.builder() \
-                                        .with_id('potsdam-seg') \
+                                        .with_id(exp_id) \
                                         .with_task(task) \
                                         .with_backend(backend) \
                                         .with_dataset(dataset) \

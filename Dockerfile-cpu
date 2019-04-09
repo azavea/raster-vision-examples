@@ -1,10 +1,6 @@
 ARG BASE_IMAGE
 FROM $BASE_IMAGE
 
-COPY ./spacenet /opt/src/spacenet
-COPY ./potsdam /opt/src/potsdam
-COPY ./xview /opt/src/xview
-COPY ./cowc  /opt/src/cowc
-COPY ./other  /opt/src/other
+COPY ./examples /opt/src/examples
 
 CMD ["bash"]
