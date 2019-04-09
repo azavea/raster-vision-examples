@@ -2,11 +2,11 @@ import os
 from os.path import join
 
 import rastervision as rv
-from examples.utils import get_scene_info, str_to_bool
+from examples.utils import get_scene_info, str_to_bool, save_image_crop
 
 
 class ObjectDetectionExperiments(rv.ExperimentSet):
-    def exp_xview(self, raw_uri, processed_uri, root_uri, test_run=False):
+    def exp_xview(self, raw_uri, processed_uri, root_uri, test=False):
         """Object detection experiment on xView data.
 
         Run the data prep notebook before running this experiment. Note all URIs can be
@@ -16,10 +16,10 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
             raw_uri: (str) directory of raw data
             processed_uri: (str) directory of processed data
             root_uri: (str) root directory for experiment output
-            test_run: (bool) if True, run a very small experiment as a test and generate
+            test: (bool) if True, run a very small experiment as a test and generate
                 debug output
         """
-        test_run = str_to_bool(test_run)
+        test = str_to_bool(test)
         exp_id = 'xview-vehicles'
         num_steps = 100000
         batch_size = 16
@@ -27,7 +27,7 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
         train_scene_info = get_scene_info(join(processed_uri, 'train-scenes.csv'))
         val_scene_info = get_scene_info(join(processed_uri, 'val-scenes.csv'))
 
-        if test_run:
+        if test:
             exp_id += '-test'
             batch_size = 1
             num_steps = 1
@@ -56,6 +56,12 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
             (raster_uri, label_uri) = scene_info
             raster_uri = join(raw_uri, raster_uri)
             label_uri = join(processed_uri, label_uri)
+
+            if test:
+                crop_uri = join(
+                    processed_uri, 'crops', os.path.basename(raster_uri))
+                save_image_crop(raster_uri, crop_uri, size=600, min_features=5)
+                raster_uri = crop_uri
 
             id = os.path.splitext(os.path.basename(raster_uri))[0]
             label_source = rv.LabelSourceConfig.builder(rv.OBJECT_DETECTION) \

@@ -9,7 +9,7 @@ from examples.utils import str_to_bool
 
 
 class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
-    def exp_main(self, raw_uri, root_uri, test_run=False):
+    def exp_main(self, raw_uri, root_uri, test=False):
         """Run an experiment on the Spacenet Vegas building dataset.
 
         This is a simple example of how to do semantic segmentation on data that
@@ -18,7 +18,7 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
         Args:
             raw_uri: (str) directory of raw data (the root of the Spacenet dataset)
             root_uri: (str) root directory for experiment output
-            test_run: (bool) if True, run a very small experiment as a test and generate
+            test: (bool) if True, run a very small experiment as a test and generate
                 debug output
         """
         base_uri = join(
@@ -33,12 +33,12 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
             label_re.match(label_path).group(1)
             for label_path in label_paths]
 
-        test_run = str_to_bool(test_run)
+        test = str_to_bool(test)
         exp_id = 'spacenet-simple-seg'
         num_steps = 1e5
         batch_size = 8
         debug = False
-        if test_run:
+        if test:
             exp_id += '-test'
             num_steps = 1
             batch_size = 1
@@ -63,8 +63,8 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
                             }) \
                             .with_chip_options(
                                 chips_per_scene=9,
-                                debug_chip_probability=1.0,
-                                negative_survival_probability=0.25,
+                                debug_chip_probability=0.25,
+                                negative_survival_probability=1.0,
                                 target_classes=[1],
                                 target_count_threshold=1000) \
                             .build()

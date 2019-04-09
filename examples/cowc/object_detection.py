@@ -2,21 +2,21 @@ import os
 from os.path import join
 
 import rastervision as rv
-from examples.utils import str_to_bool
+from examples.utils import str_to_bool, save_image_crop
 
 
 class CowcObjectDetectionExperiments(rv.ExperimentSet):
-    def exp_main(self, raw_uri, processed_uri, root_uri, test_run=False):
+    def exp_main(self, raw_uri, processed_uri, root_uri, test=False):
         """Object detection on COWC (Cars Overhead with Context) Potsdam dataset
 
         Args:
             raw_uri: (str) directory of raw data
             processed_uri: (str) directory of processed data
             root_uri: (str) root directory for experiment output
-            test_run: (bool) if True, run a very small experiment as a test and generate
+            test: (bool) if True, run a very small experiment as a test and generate
                 debug output
         """
-        test_run = str_to_bool(test_run)
+        test = str_to_bool(test)
         exp_id = 'cowc-object-detection'
         num_steps = 100000
         batch_size = 8
@@ -25,7 +25,7 @@ class CowcObjectDetectionExperiments(rv.ExperimentSet):
                            '3_13', '4_10', '5_10', '6_7', '6_9']
         val_scene_ids = ['2_13', '6_8', '3_10']
 
-        if test_run:
+        if test:
             exp_id += '-test'
             num_steps = 1
             batch_size = 1
@@ -51,15 +51,22 @@ class CowcObjectDetectionExperiments(rv.ExperimentSet):
                                   .build()
 
         def make_scene(id):
-            img_uri = join(
+            raster_uri = join(
                 raw_uri, '4_Ortho_RGBIR/top_potsdam_{}_RGBIR.tif'.format(id))
             label_uri = join(
                 processed_uri, 'labels', 'all', 'top_potsdam_{}_RGBIR.json'.format(id))
 
+            if test:
+                crop_uri = join(
+                    processed_uri, 'crops', os.path.basename(raster_uri))
+                save_image_crop(raster_uri, crop_uri, label_uri=label_uri,
+                                size=1000, min_features=5)
+                raster_uri = crop_uri
+
             return rv.SceneConfig.builder() \
                                  .with_id(id) \
                                  .with_task(task) \
-                                 .with_raster_source(img_uri, channel_order=[0, 1, 2]) \
+                                 .with_raster_source(raster_uri, channel_order=[0, 1, 2]) \
                                  .with_label_source(label_uri) \
                                  .build()
 

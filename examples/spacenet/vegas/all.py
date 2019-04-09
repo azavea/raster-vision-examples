@@ -163,7 +163,7 @@ def build_scene(task, spacenet_config, id, channel_order=None, vector_tile_optio
     return scene
 
 
-def build_dataset(task, spacenet_config, test_run, vector_tile_options=None):
+def build_dataset(task, spacenet_config, test, vector_tile_options=None):
     scene_ids = spacenet_config.get_scene_ids()
     if len(scene_ids) == 0:
         raise ValueError('No scenes found. Something is configured incorrectly.')
@@ -180,7 +180,7 @@ def build_dataset(task, spacenet_config, test_run, vector_tile_options=None):
 
     num_train_scenes = len(train_ids)
     num_val_scenes = len(val_ids)
-    if test_run:
+    if test:
         num_train_scenes = 16
         num_val_scenes = 4
     train_ids = train_ids[0:num_train_scenes]
@@ -207,8 +207,8 @@ def build_task(task_type, class_map):
                             .with_classes(class_map) \
                             .with_chip_options(
                                 chips_per_scene=9,
-                                debug_chip_probability=1.0,
-                                negative_survival_probability=0.25,
+                                debug_chip_probability=0.25,
+                                negative_survival_probability=1.0,
                                 target_classes=[1],
                                 target_count_threshold=1000) \
                             .build()
@@ -230,15 +230,15 @@ def build_task(task_type, class_map):
     return task
 
 
-def build_backend(task, test_run):
+def build_backend(task, test):
     debug = False
-    if test_run:
+    if test:
         debug = True
 
     if task.task_type == rv.SEMANTIC_SEGMENTATION:
         batch_size = 8
         num_steps = 1e5
-        if test_run:
+        if test:
             num_steps = 1
             batch_size = 1
 
@@ -252,7 +252,7 @@ def build_backend(task, test_run):
     elif task.task_type == rv.CHIP_CLASSIFICATION:
         batch_size = 8
         num_epochs = 40
-        if test_run:
+        if test:
             num_epochs = 1
             batch_size = 1
 
@@ -287,7 +287,7 @@ def build_backend(task, test_run):
     elif task.task_type == rv.OBJECT_DETECTION:
         batch_size = 8
         num_steps = 1e5
-        if test_run:
+        if test:
             num_steps = 1
             batch_size = 1
 
@@ -348,7 +348,7 @@ class VectorTileOptions():
 
 
 class SpacenetVegas(rv.ExperimentSet):
-    def exp_main(self, raw_uri, root_uri, test_run=False,
+    def exp_main(self, raw_uri, root_uri, test=False,
                  target=BUILDINGS, task_type=rv.SEMANTIC_SEGMENTATION,
                  vector_tile_options=None):
         """Run an experiment on the Spacenet Vegas road or building dataset.
@@ -358,7 +358,7 @@ class SpacenetVegas(rv.ExperimentSet):
         Args:
             raw_uri: (str) directory of raw data (the root of the Spacenet dataset)
             root_uri: (str) root directory for experiment output
-            test_run: (bool) if True, run a very small experiment as a test and generate
+            test: (bool) if True, run a very small experiment as a test and generate
                 debug output
             target: (str) 'buildings' or 'roads'
             task_type: (str) 'semantic_segmentation', 'object_detection', or
@@ -367,7 +367,7 @@ class SpacenetVegas(rv.ExperimentSet):
                 id_field. See VectorTileVectorSourceConfigBuilder.with_uri, .with_zoom
                 and .with_id_field methods for more details.
         """
-        test_run = str_to_bool(test_run)
+        test = str_to_bool(test)
         exp_id = '{}-{}'.format(target, task_type.lower())
         task_type = task_type.upper()
         spacenet_config = SpacenetConfig.create(raw_uri, target)
@@ -375,10 +375,10 @@ class SpacenetVegas(rv.ExperimentSet):
         vector_tile_options = VectorTileOptions.build(vector_tile_options)
 
         task = build_task(task_type, spacenet_config.get_class_map())
-        backend = build_backend(task, test_run)
+        backend = build_backend(task, test)
         analyzer = rv.AnalyzerConfig.builder(rv.STATS_ANALYZER) \
                                     .build()
-        dataset = build_dataset(task, spacenet_config, test_run,
+        dataset = build_dataset(task, spacenet_config, test,
                                 vector_tile_options=vector_tile_options)
 
         # Need to use stats_analyzer because imagery is uint16.

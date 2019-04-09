@@ -6,13 +6,13 @@ from examples.spacenet.vegas.all import (
 from examples.utils import str_to_bool
 
 
-def build_backend(task, test_run, learning_rate):
-    if test_run:
+def build_backend(task, test, learning_rate):
+    if test:
         debug = True
     else:
         debug = False
 
-    if test_run:
+    if test:
         num_steps = 1
         batch_size = 1
     else:
@@ -33,7 +33,7 @@ def build_backend(task, test_run, learning_rate):
 
 
 class HyperParameterSearch(rv.ExperimentSet):
-    def exp_main(self, raw_uri, root_uri, test_run=False, learning_rates='0.001'):
+    def exp_main(self, raw_uri, root_uri, test=False, learning_rates='0.001'):
         """Run a hyper-parameter search experiment on Spacenet Vegas.
 
         Generates an experiment for each learning rate using a TF Deeplab semantic
@@ -42,11 +42,11 @@ class HyperParameterSearch(rv.ExperimentSet):
         Args:
             raw_uri: (str) directory of raw data (the root of the Spacenet dataset)
             root_uri: (str) root directory for experiment output
-            test_run: (bool) if True, run a very small experiment as a test and
+            test: (bool) if True, run a very small experiment as a test and
                 generate debug output
             learning_rates: (str) comma-delimited list of learning rates to use
         """
-        test_run = str_to_bool(test_run)
+        test = str_to_bool(test)
         target = BUILDINGS
         task_type = rv.SEMANTIC_SEGMENTATION
         learning_rates = learning_rates.split(',')
@@ -60,14 +60,14 @@ class HyperParameterSearch(rv.ExperimentSet):
         task = build_task(task_type, spacenet_config.get_class_map())
         analyzer = rv.AnalyzerConfig.builder(rv.STATS_ANALYZER) \
                                     .build()
-        dataset = build_dataset(task, spacenet_config, test_run)
+        dataset = build_dataset(task, spacenet_config, test)
 
         # Reduce number of scenes
         dataset.train_scenes = dataset.train_scenes[0:2**7]
 
         exps = []
         for learning_rate in learning_rates:
-            backend = build_backend(task, test_run, learning_rate)
+            backend = build_backend(task, test, learning_rate)
             exp_id = '{}_{}_rate={}'.format(target, task_type.lower(),
                                             learning_rate)
 
