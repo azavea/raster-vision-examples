@@ -4,6 +4,7 @@ FROM $BASE_IMAGE
 COPY ./spacenet /opt/src/spacenet
 COPY ./potsdam /opt/src/potsdam
 COPY ./xview /opt/src/xview
+COPY ./uswtdb /opt/src/uswtdb
 COPY ./cowc  /opt/src/cowc
 COPY ./other  /opt/src/other
 

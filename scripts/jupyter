@@ -34,6 +34,7 @@ then
            -v "$SRC"/spacenet:/opt/src/spacenet \
            -v "$SRC"/potsdam:/opt/src/potsdam \
            -v "$SRC"/xview:/opt/src/xview \
+           -v "$SRC"/uswtb:/opt/src/uswtdb \
            -v "$SRC"/cowc:/opt/src/cowc \
            -v "$SRC"/other:/opt/src/other \
            -v "$SRC"/notebooks:/opt/notebooks \
