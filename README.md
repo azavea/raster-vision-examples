@@ -499,7 +499,30 @@ Below are sample predictions and eval metrics.
 
 ![COWC Potsdam predictions](img/cowc-potsdam.png)
 
-TODO: metrics
+<details><summary>Eval Metrics</summary>
+
+```javascript
+    {
+        "precision": 0.8516560932239331,
+        "class_name": "vehicle",
+        "class_id": 1,
+        "recall": 0.8495049504950496,
+        "f1": 0.8491190071843167,
+        "gt_count": 505,
+        "count_error": 1.734723475976807e-18
+    },
+    {
+        "precision": 0.8516560932239331,
+        "class_name": "average",
+        "class_id": null,
+        "recall": 0.8495049504950496,
+        "f1": 0.8491190071843167,
+        "gt_count": 505,
+        "count_error": 1.734723475976807e-18
+    }
+```
+
+</details>
 
 ### xView Vehicle Object Detection
 
@@ -517,7 +540,30 @@ Below are sample predictions and eval metrics.
 
 ![xView predictions](img/xview.png)
 
-TODO: metrics
+<details><summary>Eval Metrics</summary>
+
+```javascript
+{
+    "class_name": "vehicle",
+    "precision": 0.4789625193065175,
+    "class_id": 1,
+    "f1": 0.4036499117825103,
+    "recall": 0.3597840599059615,
+    "count_error": -0.2613920009287745,
+    "gt_count": 17227
+},
+{
+    "class_name": "average",
+    "precision": 0.4789625193065175,
+    "class_id": null,
+    "f1": 0.4036499117825103,
+    "recall": 0.3597840599059615,
+    "count_error": -0.2613920009287745,
+    "gt_count": 17227
+}
+```
+
+</details>
 
 ## Model Zoo
 
