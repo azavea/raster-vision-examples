@@ -60,7 +60,8 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
         val_label_paths = label_paths[num_train_label_paths:]
 
         # specify steps and batch size
-        NUM_STEPS = 20000
+        # NUM_STEPS = 817
+        NUM_STEPS = 100000
         BATCH_SIZE = 16
         if test == 'True':
             NUM_STEPS = 1
@@ -77,7 +78,7 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
                 label_path)
 
             # build raster source
-            raster_source = rv.RasterSourceConfig.builder(rv.GEOTIFF_SOURCE) \
+            raster_source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
                 .with_uri(train_image_uri) \
                 .with_channel_order([0, 1, 2]) \
                 .build()
@@ -115,8 +116,28 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
             .with_batch_size(BATCH_SIZE)\
             .with_num_steps(NUM_STEPS) \
             .with_train_options(do_monitoring=True,
-                                replace_model=True) \
+                                replace_model=False) \
             .with_model_defaults(rv.FASTER_RCNN_RESNET50_COCO) \
+            .build()
+
+        mobilenet = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
+            .with_task(task) \
+            .with_debug(True) \
+            .with_batch_size(BATCH_SIZE)\
+            .with_num_steps(NUM_STEPS) \
+            .with_train_options(do_monitoring=True,
+                                replace_model=False) \
+            .with_model_defaults(rv.SSD_MOBILENET_V2_COCO) \
+            .build()
+
+        frcnn_inception = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
+            .with_task(task) \
+            .with_debug(True) \
+            .with_batch_size(BATCH_SIZE)\
+            .with_num_steps(NUM_STEPS) \
+            .with_train_options(do_monitoring=True,
+                                replace_model=False) \
+            .with_model_defaults(rv.FASTER_RCNN_INCEPTION_V2_COCO) \
             .build()
 
         # create training and validation scenes
@@ -138,7 +159,25 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
             .with_backend(resnet) \
             .build()
 
-        return rn_experiment
+        mn_experiment = rv.ExperimentConfig.builder() \
+            .with_root_uri(root_uri) \
+            .with_task(task) \
+            .with_dataset(dataset) \
+            .with_chip_key('uswtdb-object-detection-resnet-ia-ok-tx') \
+            .with_id('uswtdb-object-detection-mobilenet-ia-ok-tx') \
+            .with_backend(mobilenet) \
+            .build()
+
+        frcnn_inception_experiment = rv.ExperimentConfig.builder() \
+            .with_root_uri(root_uri) \
+            .with_task(task) \
+            .with_dataset(dataset) \
+            .with_chip_key('uswtdb-object-detection-resnet-ia-ok-tx') \
+            .with_id('uswtdb-object-detection-frcnn_inception-ia-ok-tx') \
+            .with_backend(frcnn_inception) \
+            .build()
+
+        return [rn_experiment, mn_experiment, frcnn_inception_experiment]
 
 if __name__ == '__main__':
     rv.main()
