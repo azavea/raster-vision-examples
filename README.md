@@ -163,7 +163,7 @@ If you are running locally (which means you're running this against a GPU machin
 
 If you are running on AWS Batch, run:
 ```
-> rastervision run aws_batch -e spacenet.chip_classification -a root_uri ${RVROOT}
+> rastervision run aws_batch -e spacenet.rio_chip_classification -a root_uri ${RVROOT}
 ```
 
 where `${RVROOT}` is your RV root, for instance `s3://raster-vision-rob-dev/spacenet/cc`
@@ -238,14 +238,26 @@ rastervision run local -p spacenet/simple_segmentation.py -a root_uri <root_uri>
 where `<root_uri>` is a local RV root. Once you have run the test example and ensured that the experiment is setup correctly, you can run the full experiment with the following command:
 
 ```
-rastervision run aws_batch -p spacenet/simple_segmentation.py -a <root_uri>
+rastervision run aws_batch -p spacenet/simple_segmentation.py -a root_uri <root_uri>
 ```
 
 In this case `<root_uri>` should be a remote RV root.
 
+There are a lot of files to check the existance of, so if you'd like to skip this step use the `-x` option:
+
+```
+rastervision run aws_batch -p spacenet/simple_segmentation.py -x -a root_uri <root_uri>
+```
+
+You can also skip the check for existing output by setting the rerun option:
+
+```
+rastervision run aws_batch -p spacenet/simple_segmentation.py -x --rerun -a root_uri <root_uri>
+```
+
 ### Step 2: View results
 
-After the experiment has completed you can view the predictions in QGIS. 
+After the experiment has completed you can view the predictions in QGIS.
 
 ![Spacenet Vegas Buildings in QGIS](img/spacenet-vegas-buildings-qgis.jpg)
 

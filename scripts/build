@@ -27,6 +27,8 @@ then
             BASE_IMAGE="raster-vision-cpu"
         fi
 
+        echo "Using base image '${BASE_IMAGE}'"
+
         docker build --build-arg BASE_IMAGE="$BASE_IMAGE" -t raster-vision-examples-cpu -f Dockerfile-cpu .
     fi
     if [ $# -eq 0 -o "${1:-}" = "--gpu" ]
@@ -37,6 +39,8 @@ then
         else
             BASE_IMAGE="raster-vision-gpu"
         fi
+
+        echo "Using base image '${BASE_IMAGE}'"
 
         docker build --build-arg BASE_IMAGE="$BASE_IMAGE" -t raster-vision-examples-gpu -f Dockerfile-gpu .
     fi
