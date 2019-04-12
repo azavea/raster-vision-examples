@@ -1,6 +1,7 @@
 import csv
 from io import StringIO
 import tempfile
+import os
 
 import rasterio
 from shapely.strtree import STRtree
@@ -11,6 +12,7 @@ from rastervision.data import RasterioCRSTransformer, GeoJSONVectorSource
 from rastervision.utils.files import (
     file_to_str, file_exists, get_local_path, upload_or_copy, make_dir,
     file_to_json)
+from rastervision.filesystem import S3FileSystem
 
 
 def str_to_bool(x):
@@ -47,46 +49,54 @@ def save_image_crop(image_uri, crop_uri, label_uri=None, size=600,
     """
     if not file_exists(crop_uri):
         print('Saving test crop to {}...'.format(crop_uri))
-        im_dataset = rasterio.open(image_uri)
-        h, w = im_dataset.height, im_dataset.width
+        old_environ = os.environ.copy()
+        try:
+            request_payer = S3FileSystem.get_request_payer()
+            if request_payer == 'requester':
+                os.environ['AWS_REQUEST_PAYER'] = request_payer
+            im_dataset = rasterio.open(image_uri)
+            h, w = im_dataset.height, im_dataset.width
 
-        extent = Box(0, 0, h, w)
-        windows = extent.get_windows(size, size)
-        if label_uri is not None:
-            crs_transformer = RasterioCRSTransformer.from_dataset(im_dataset)
-            vs = GeoJSONVectorSource(label_uri, crs_transformer)
-            geojson = vs.get_geojson()
-            geoms = []
-            for f in geojson['features']:
-                g = shape(f['geometry'])
-                geoms.append(g)
-            tree = STRtree(geoms)
-
-        for w in windows:
-            use_window = True
+            extent = Box(0, 0, h, w)
+            windows = extent.get_windows(size, size)
             if label_uri is not None:
-                w_polys = tree.query(w.to_shapely())
-                use_window = len(w_polys) >= min_features
+                crs_transformer = RasterioCRSTransformer.from_dataset(im_dataset)
+                vs = GeoJSONVectorSource(label_uri, crs_transformer)
+                geojson = vs.get_geojson()
+                geoms = []
+                for f in geojson['features']:
+                    g = shape(f['geometry'])
+                    geoms.append(g)
+                tree = STRtree(geoms)
 
-            if use_window:
-                w = w.rasterio_format()
-                im = im_dataset.read(window=w)
+            for w in windows:
+                use_window = True
+                if label_uri is not None:
+                    w_polys = tree.query(w.to_shapely())
+                    use_window = len(w_polys) >= min_features
 
-                with tempfile.TemporaryDirectory() as tmp_dir:
-                    crop_path = get_local_path(crop_uri, tmp_dir)
-                    make_dir(crop_path, use_dirname=True)
+                if use_window:
+                    w = w.rasterio_format()
+                    im = im_dataset.read(window=w)
 
-                    meta = im_dataset.meta
-                    meta['width'], meta['height'] = size, size
-                    meta['transform'] = rasterio.windows.transform(
-                        w, im_dataset.transform)
+                    with tempfile.TemporaryDirectory() as tmp_dir:
+                        crop_path = get_local_path(crop_uri, tmp_dir)
+                        make_dir(crop_path, use_dirname=True)
 
-                    with rasterio.open(crop_path, 'w', **meta) as dst:
-                        dst.colorinterp = im_dataset.colorinterp
-                        dst.write(im)
+                        meta = im_dataset.meta
+                        meta['width'], meta['height'] = size, size
+                        meta['transform'] = rasterio.windows.transform(
+                            w, im_dataset.transform)
 
-                    upload_or_copy(crop_path, crop_uri)
-                break
+                        with rasterio.open(crop_path, 'w', **meta) as dst:
+                            dst.colorinterp = im_dataset.colorinterp
+                            dst.write(im)
 
-        if not use_window:
-            raise ValueError('Could not find a good crop.')
+                        upload_or_copy(crop_path, crop_uri)
+                    break
+
+            if not use_window:
+                raise ValueError('Could not find a good crop.')
+        finally:
+            os.environ.clear()
+            os.environ.update(old_environ)
