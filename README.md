@@ -104,7 +104,7 @@ You'll need to do some data preprocessing, which we can do in the Jupyter notebo
 > docker/run --jupyter [--aws]
 ```
 
-The `--aws` option is only needed if pulling data from S3. In Jupyter inside the browser, navigate to the [spacenet/spacenet_rio_chip_classification_data_prep.ipynb](notebooks/spacenet/spacenet_rio_chip_classification_data_prep.ipynb) notebook. Set the URIs in the first cell and then run the rest of the notebook. Set the `processed_uri` to a local or S3 URI depending on where you want to run the experiment.
+The `--aws` option is only needed if pulling data from S3. In Jupyter inside the browser, navigate to the [spacenet/spacenet_rio_chip_classification_data_prep.ipynb](notebooks/spacenet/spacenet_rio_chip_class_data_prep.ipynb) notebook. Set the URIs in the first cell and then run the rest of the notebook. Set the `processed_uri` to a local or S3 URI depending on where you want to run the experiment.
 
 ![Jupyter Notebook](img/jupyter.png)
 
@@ -351,7 +351,7 @@ Sample predictions and eval metrics can be seen below.
 
 ##### Variant: Use vector tiles to get labels
 
-It is possible to use vector tiles as a source of labels, either in `z/x/y` or `.mbtiles` format. To use vector tiles instead of GeoJSON, run the experiment with the following argument: `-a vector_tile_options "<uri>,<zoom>,<id_field>"`. See the [vector tile docs(https://docs.rastervision.io/en/latest/api.html#rv-vector-tile-source) for a description of these arguments.
+It is possible to use vector tiles as a source of labels, either in `z/x/y` or `.mbtiles` format. To use vector tiles instead of GeoJSON, run the experiment with the following argument: `-a vector_tile_options "<uri>,<zoom>,<id_field>"`. See the [vector tile docs](https://docs.rastervision.io/en/latest/api.html#rv-vector-tile-source) for a description of these arguments.
 
 To run this example using OSM tiles in `.mbtiles` format, first create an extract around Las Vegas using:
 
