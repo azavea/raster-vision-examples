@@ -62,7 +62,7 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
         # specify steps and batch size
         # NUM_STEPS = 817
         NUM_STEPS = 100000
-        BATCH_SIZE = 16
+        BATCH_SIZE = 8
         if test == 'True':
             NUM_STEPS = 1
             BATCH_SIZE = 1
@@ -130,6 +130,16 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
             .with_model_defaults(rv.SSD_MOBILENET_V2_COCO) \
             .build()
 
+        mobilenet_v1 = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
+            .with_task(task) \
+            .with_debug(True) \
+            .with_batch_size(BATCH_SIZE)\
+            .with_num_steps(NUM_STEPS) \
+            .with_train_options(do_monitoring=True,
+                                replace_model=False) \
+            .with_model_defaults(rv.SSD_MOBILENET_V1_COCO) \
+            .build()
+
         frcnn_inception = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
             .with_task(task) \
             .with_debug(True) \
@@ -168,6 +178,15 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
             .with_backend(mobilenet) \
             .build()
 
+        mn1_experiment = rv.ExperimentConfig.builder() \
+            .with_root_uri(root_uri) \
+            .with_task(task) \
+            .with_dataset(dataset) \
+            .with_chip_key('uswtdb-object-detection-resnet-ia-ok-tx') \
+            .with_id('uswtdb-object-detection-mobilenet_v1-ia-ok-tx') \
+            .with_backend(mobilenet) \
+            .build()
+
         frcnn_inception_experiment = rv.ExperimentConfig.builder() \
             .with_root_uri(root_uri) \
             .with_task(task) \
@@ -177,7 +196,7 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
             .with_backend(frcnn_inception) \
             .build()
 
-        return [rn_experiment, mn_experiment, frcnn_inception_experiment]
+        return [rn_experiment, mn_experiment, mn1_experiment, frcnn_inception_experiment]
 
 if __name__ == '__main__':
     rv.main()
