@@ -3,20 +3,13 @@ import random
 
 import rastervision as rv
 from rastervision.utils.files import list_paths
-
+from . import constants
 
 def label_path_to_scene_properties(label_path):
     '''
     Given the path to a label source, extract the corresponding image
     uri and the scene id
     '''
-
-    # imagery for these three states come from different years
-    state_years = {
-        'ia': '2017',
-        'ok': '2017',
-        'tx': '2016'
-    }
 
     # find the scene id
     scene_id = os.path.basename(label_path).replace('.geojson', '')
@@ -27,7 +20,7 @@ def label_path_to_scene_properties(label_path):
     # extract the state, year and folder name for the image
     parts = label_path.split('/')
     state = parts[-2]
-    year = state_years[state]
+    year = constants.STATE_YEARS[state]
     folder = scene_id.split('_')[1][:5]
 
     # construct the image uri
@@ -39,33 +32,48 @@ def label_path_to_scene_properties(label_path):
 
 class ObjectDetectionExperiments(rv.ExperimentSet):
 
-    def exp_uswtdb(self, root_uri, test='False'):
+    def exp_uswtdb(self, version, experiment_id, states=None, test='False'):
 
         # we will use the label geojson files to dictate which scenes to create
         # this is the folder where the labels for each of the three states are
         base_uri = 's3://raster-vision-wind-turbines/labels'
 
-        # find all geojson label stores within that base uro
-        label_paths = list_paths(base_uri, ext='.geojson')
+        # find all geojson label stores within that base uri for selected states
+        avail_states = list(constants.STATE_YEARS.keys())
+        if states:
+            state_list = states.split(',')
+        else:
+            state_list = avail_states
+        
+        label_paths = []
+        for state in state_list:
+            state = state.lower()
+            if state in avail_states:
+                state_uri = os.path.join(base_uri, state)
+                label_paths += list_paths(state_uri, ext='.geojson')
+            else:
+                raise Exception(
+                    'states must be a comma-separated list of any one of the '\
+                    'following state abbreviations {}, found "{}".'.format(avail_states, state))
 
-        # option to run a small subset of the entire experiment
-        if test == 'True':
-            label_paths = label_paths[0:10]
-
-        # divide label paths into traing and validation sets
+        # randomize the order of label paths
         random.seed(5678)
         random.shuffle(label_paths)
-        num_train_label_paths = round(len(label_paths) * 0.8)
-        train_label_paths = label_paths[0:num_train_label_paths]
-        val_label_paths = label_paths[num_train_label_paths:]
-
+        
         # specify steps and batch size
         NUM_STEPS = 20000
         BATCH_SIZE = 16
+
+        # option to run a small subset of the entire experiment
         if test == 'True':
+            label_paths = label_paths[0:4]
             NUM_STEPS = 1
             BATCH_SIZE = 1
-
+        
+        # divide label paths into traing and validation sets
+        num_train_label_paths = round(len(label_paths) * 0.8)
+        train_label_paths = label_paths[0:num_train_label_paths]
+        val_label_paths = label_paths[num_train_label_paths:]
 
         def build_scene(label_path):
             '''
@@ -129,12 +137,15 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
                                   .with_validation_scenes(val_scenes) \
                                   .build()
 
+        # get the root uri
+        root_uri = os.path.join('s3://raster-vision-wind-turbines/versions', version)
+
         # build experiment
         rn_experiment = rv.ExperimentConfig.builder() \
             .with_root_uri(root_uri) \
             .with_task(task) \
             .with_dataset(dataset) \
-            .with_id('uswtdb-object-detection-resnet-ia-ok-tx') \
+            .with_id(experiment_id) \
             .with_backend(resnet) \
             .build()
 
