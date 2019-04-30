@@ -10,12 +10,40 @@ REPO_ROOT="$( cd -P "$( dirname "$SCRIPTS_DIR" )" && pwd )"
 function usage() {
     echo -n \
          "Usage: $(basename "$0")
-Run console of docker image locally.
-All arguments are passed to 'docker run'.
+Run a console in the raster-vision docker image locally.
+--name sets the name of the running container
+--gpu use the NVIDIA runtime and GPU image
+All arguments after above options are passed to 'docker run'.
 "
 }
 
 IMAGE="raster-vision-examples-cpu"
+
+# Parse options using scheme in
+# https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
+POSITIONAL=()
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+    case $key in
+        --gpu)
+        IMAGE="raster-vision-examples-gpu"
+        RUNTIME="--runtime=nvidia"
+        shift # past argument
+        ;;
+        --name)
+        shift
+        NAME="--name $1"
+        shift
+        ;;
+        *)    # unknown option
+        POSITIONAL+=("$1") # save it in an array for later
+        shift # past argument
+        ;;
+    esac
+done
+set -- "${POSITIONAL[@]}" # restore positional parameters
+
 DATA_DIR="${RASTER_VISION_DATA_DIR:-${REPO_ROOT}/data}"
 
 if [ -z "$RASTER_VISION_REPO" ]
@@ -34,9 +62,10 @@ then
     docker run ${RUNTIME} ${NAME} --rm -it ${TENSORBOARD} ${AWS} ${RV_CONFIG} \
            -v "$REPO_ROOT"/spacenet:/opt/src/spacenet \
            -v "$REPO_ROOT"/potsdam:/opt/src/potsdam \
-	   -v "$REPO_ROOT"/uswtdb:/opt/src/uswtdb \
-	       -v "$REPO_ROOT"/xview:/opt/src/xview \
+	       -v "$REPO_ROOT"/uswtdb:/opt/src/uswtdb \
+           -v "$REPO_ROOT"/xview:/opt/src/xview \
            -v "$REPO_ROOT"/cowc:/opt/src/cowc \
+           -v "$REPO_ROOT"/other:/opt/src/other \
            -v "$REPO_ROOT"/notebooks:/opt/notebooks \
            ${SRC_FLAGS} -v "$DATA_DIR":/opt/data \
            ${IMAGE} "${@:1}"

@@ -26,3 +26,10 @@ var/
 
 # Jupyter
 .ipynb_checkpoints
+
+data/
+
+examples/uswtdb/labels
+examples/uswtdb/*.geojson
+
+.vscode/
