@@ -32,7 +32,7 @@ def label_path_to_scene_properties(label_path):
 
 class ObjectDetectionExperiments(rv.ExperimentSet):
 
-    def exp_uswtdb(self, version, experiment_id, states=None, test='False'):
+    def exp_uswtdb(self, version, experiment_id, states=None, steps=None, test='False'):
 
         # we will use the label geojson files to dictate which scenes to create
         # this is the folder where the labels for each of the three states are
@@ -60,9 +60,17 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
         random.seed(5678)
         random.shuffle(label_paths)
         
-        # specify steps and batch size
-        NUM_STEPS = 20000
+        # specify step default and batch size
+        NUM_STEPS = 100000
         BATCH_SIZE = 16
+
+        if steps:
+            try:
+                NUM_STEPS = int(steps.replace(',', ''))
+            except ValueError:
+                raise ValueError('The "steps" parameter must be a positive integer, got {}'.format(steps))
+            if NUM_STEPS < 0:
+                raise ValueError('The "steps" parameter must be positive, got {}'.format(NUM_STEPS))
 
         # option to run a small subset of the entire experiment
         if test == 'True':
