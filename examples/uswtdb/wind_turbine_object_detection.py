@@ -32,7 +32,7 @@ def label_path_to_scene_properties(label_path):
 
 class ObjectDetectionExperiments(rv.ExperimentSet):
 
-    def exp_uswtdb(self, version, experiment_id, states=None, steps=None, test='False'):
+    def exp_uswtdb(self, version, experiment_id, states=None, steps=None, chip_uri=None, test='False'):
 
         # we will use the label geojson files to dictate which scenes to create
         # this is the folder where the labels for each of the three states are
@@ -131,7 +131,8 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
             .with_batch_size(BATCH_SIZE)\
             .with_num_steps(NUM_STEPS) \
             .with_train_options(do_monitoring=True,
-                                replace_model=True) \
+                                replace_model=True,
+                                sync_interval=300) \
             .with_model_defaults(rv.FASTER_RCNN_RESNET50_COCO) \
             .build()
 
@@ -154,9 +155,12 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
             .with_task(task) \
             .with_dataset(dataset) \
             .with_id(experiment_id) \
-            .with_backend(resnet) \
-            .build()
+            .with_backend(resnet) 
+        
+        if chip_uri:
+            rn_experiment.config['chip_uri'] = chip_uri
 
+        rn_experiment = rn_experiment.build()
         return rn_experiment
 
 if __name__ == '__main__':
