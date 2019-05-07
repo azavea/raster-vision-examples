@@ -5,6 +5,7 @@ import rastervision as rv
 from rastervision.utils.files import list_paths
 from . import constants
 
+
 def label_path_to_scene_properties(label_path):
     '''
     Given the path to a label source, extract the corresponding image
@@ -44,7 +45,7 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
             state_list = states.split(',')
         else:
             state_list = avail_states
-        
+
         label_paths = []
         for state in state_list:
             state = state.lower()
@@ -53,13 +54,13 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
                 label_paths += list_paths(state_uri, ext='.geojson')
             else:
                 raise Exception(
-                    'states must be a comma-separated list of any one of the '\
+                    'states must be a comma-separated list of any one of the '
                     'following state abbreviations {}, found "{}".'.format(avail_states, state))
 
         # randomize the order of label paths
         random.seed(5678)
         random.shuffle(label_paths)
-        
+
         # specify step default and batch size
         NUM_STEPS = 100000
         BATCH_SIZE = 16
@@ -68,16 +69,18 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
             try:
                 NUM_STEPS = int(steps.replace(',', ''))
             except ValueError:
-                raise ValueError('The "steps" parameter must be a positive integer, got {}'.format(steps))
+                raise ValueError(
+                    'The "steps" parameter must be a positive integer, got {}'.format(steps))
             if NUM_STEPS < 0:
-                raise ValueError('The "steps" parameter must be positive, got {}'.format(NUM_STEPS))
+                raise ValueError(
+                    'The "steps" parameter must be positive, got {}'.format(NUM_STEPS))
 
         # option to run a small subset of the entire experiment
         if test == 'True':
             label_paths = label_paths[0:4]
             NUM_STEPS = 1
             BATCH_SIZE = 1
-        
+
         # divide label paths into traing and validation sets
         num_train_label_paths = round(len(label_paths) * 0.8)
         train_label_paths = label_paths[0:num_train_label_paths]
@@ -113,7 +116,6 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
 
             return scene
 
-
         # build task config
         task = rv.TaskConfig.builder(rv.OBJECT_DETECTION) \
                             .with_chip_size(300) \
@@ -137,8 +139,10 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
             .build()
 
         # create training and validation scenes
-        train_scenes = [build_scene(label_path) for label_path in train_label_paths]
-        val_scenes = [build_scene(label_path) for label_path in val_label_paths]
+        train_scenes = [build_scene(label_path)
+                        for label_path in train_label_paths]
+        val_scenes = [build_scene(label_path)
+                      for label_path in val_label_paths]
 
         # build dataset config
         dataset = rv.DatasetConfig.builder() \
@@ -147,7 +151,8 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
                                   .build()
 
         # get the root uri
-        root_uri = os.path.join('s3://raster-vision-wind-turbines/versions', version)
+        root_uri = os.path.join(
+            's3://raster-vision-wind-turbines/versions', version)
 
         # build experiment
         rn_experiment = rv.ExperimentConfig.builder() \
@@ -155,13 +160,14 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
             .with_task(task) \
             .with_dataset(dataset) \
             .with_id(experiment_id) \
-            .with_backend(resnet) 
-        
+            .with_backend(resnet)
+
         if chip_uri:
             rn_experiment.config['chip_uri'] = chip_uri
 
         rn_experiment = rn_experiment.build()
         return rn_experiment
+
 
 if __name__ == '__main__':
     rv.main()
