@@ -10,8 +10,8 @@ from examples.utils import str_to_bool
 # Check out the docs for more information about the Raster Vision API:
 # https://docs.rastervision.io/en/0.9/index.html#documentation
 
-# Raster Vision ExperimentSets run similarly to the unittest.TestSuite. 
-# When you pass this script to the Raster Vision command line tool, it 
+# Raster Vision ExperimentSets run similarly to the unittest.TestSuite.
+# When you pass this script to the Raster Vision command line tool, it
 # will reflexively run any ExperimentSet method that starts with 'exp_'.
 # Return ExperimentConfigs from these methods in order to kick off their
 # corresponding experiments.
@@ -39,7 +39,7 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
         # image id indicates which scene each is associated with.
         raster_fn_prefix = 'RGB-PanSharpen_AOI_2_Vegas_img'
         label_fn_prefix = 'buildings_AOI_2_Vegas_img'
-        # Find all of the image ids that have associated images and labels. Collect 
+        # Find all of the image ids that have associated images and labels. Collect
         # these values to use as our scene ids.
         label_paths = list_paths(label_uri, ext='.geojson')
         label_re = re.compile(r'.*{}(\d+)\.geojson'.format(label_fn_prefix))
@@ -96,11 +96,11 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
         # pixel class names and colors, and addiitonal chip options.
         task = rv.TaskConfig.builder(rv.SEMANTIC_SEGMENTATION) \
                             .with_chip_size(300) \
-                            .with_classes({  
+                            .with_classes({
                                 'Building': (1, 'orange'),
                                 'Background': (2, 'black')
                             }) \
-            .with_chip_options( 
+            .with_chip_options(
                                 chips_per_scene=9,
                                 debug_chip_probability=0.25,
                                 negative_survival_probability=1.0,
@@ -109,7 +109,7 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
             .build()
 
         # Next we will create a backend that is built on top of a third-party
-        # deep learning library. In this case we will construct the 
+        # deep learning library. In this case we will construct the
         # BackendConfig for DeepLab, which is the default semantic segmentation
         # option for Raster Vision. We use 'with_' methods for additional
         # configuration including the training parameters we specified above
@@ -127,14 +127,14 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
         # We will use this function to create a list of scenes that we will pass
         # to the DataSetConfig builder.
         def make_scene(id):
-            """Make a Scene object for each image/label pair
+            """Make a SceneConfig object for each image/label pair
 
             Args:
                 id (str): The id that corresponds to both the .tiff image source
                     and .geojson label source for a given scene
-            
+
             Returns:
-                rv.data.Scene: a Raster Vision Scene object which is composed of
+                rv.data.SceneConfig: a SceneConfig object which is composed of
                     images, labels and optionally AOIs
             """
             # Find the uri for the image associated with this is
@@ -142,7 +142,7 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
                                            '{}{}.tif'.format(raster_fn_prefix, id))
 
             # Construct a raster source from an image uri that can be handled by Rasterio.
-            # We also specify the order of image channels by their indices and add a 
+            # We also specify the order of image channels by their indices and add a
             # stats transformer which normalizes pixel values into uint8.
             raster_source = rv.RasterSourceConfig.builder(rv.RASTERIO_SOURCE) \
                 .with_uri(train_image_uri) \
@@ -154,9 +154,11 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
             # define the geojson label source uri
             vector_source = os.path.join(
                 label_uri, '{}{}.geojson'.format(label_fn_prefix, id))
-            
-            # Since this is a semantic segmentation experiment, we need to rasterize
-            # our geojson. We create RasterSourceConfigBuilder using `rv.RASTERIZED_SOURCE`
+
+            # Since this is a semantic segmentation experiment and the labels
+            # are distributed in a vector-based GeoJSON format, we need to rasterize
+            # the labels. We create  aRasterSourceConfigBuilder using
+            # `rv.RASTERIZED_SOURCE`
             # indicating that it will come from a vector source. We then specify the uri
             # of the vector source and (in the 'with_rasterizer_options' method) the id
             # of the pixel class we would like to use as background.
@@ -196,7 +198,7 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
         # We will need to convert this imagery from uint16 to uint8
         # in order to use it. We specified that this conversion should take place
         # when we built the train raster source but that process will require
-        # dataset-level statistics. To get these stats we need to create an 
+        # dataset-level statistics. To get these stats we need to create an
         # analyzer.
         analyzer = rv.AnalyzerConfig.builder(rv.STATS_ANALYZER) \
                                     .build()
@@ -213,7 +215,7 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
                                         .with_dataset(dataset) \
                                         .with_root_uri(root_uri) \
                                         .build()
-        
+
         # Return one or more experiment configs to run the experiment(s)
         return experiment
 
