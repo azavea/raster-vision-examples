@@ -28,3 +28,6 @@ var/
 .ipynb_checkpoints
 
 ./data/
+data/
+
+.vscode/*
