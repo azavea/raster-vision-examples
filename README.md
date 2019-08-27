@@ -190,13 +190,6 @@ After everything completes, which should take about 1.5 hours if you're running 
 ]
 ```
 
-⚠️ The QGIS plugin does not work with Raster Vision 0.9 (the latest release) yet. We plan on updating it soon. In the mean time, the following instructions  will not work.
-
-~~Optional: To see validation scene images and predictions on a map, we can utilize the [QGIS plugin](https://github.com/azavea/raster-vision-qgis).
-A walkthrough of using QGIS to inspect these results can be found [in the QGIS plugin README](https://github.com/azavea/raster-vision-qgis#tutorial-view-spacenet-building-chip-classification). Viewing the validation scene results for scene ID `013022232023` looks like this:~~
-
-![QGIS results explorer](img/qgis-spacenet-cc.png)
-
 #### Step 6: Predict on new imagery
 
 After running an experiment, a *predict package* is saved into `$root_uri/bundle/spacenet-rio-chip-classification/`. This can be used to make predictions on new images. See the [Model Zoo](#model-zoo) section for more details.
@@ -298,7 +291,6 @@ Below are sample predictions and eval metrics.
 ```
 
 </details>
-
 
 #### SpaceNet Vegas Roads and Buildings: All Tasks <a name="spacenet-vegas-all-tasks"></a>
 
