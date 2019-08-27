@@ -12,11 +12,10 @@ def clear_layers():
     for layer_id in layer_ids:
         QgsProject.instance().removeMapLayer(layer_id)
 
-
-# style_uri = '/Users/lfishgold/projects/raster-vision-examples/qgis-style.qml'
-predict_dir = '/Users/lfishgold/raster-vision-data/examples/spacenet/vegas/buildings-local-output/predict/buildings-semantic-segmentation'
+style_uri = '/Users/lfishgold/projects/raster-vision-examples/qgis/style.qml'
+predict_dir = '/Users/lfishgold/raster-vision-data/examples/spacenet/vegas/buildings-local-output/predict/buildings-semantic_segmentation'
 predict_paths = glob.glob(join(predict_dir, '*.tif'))
-image_dir = '/Users/lfishgold/raster-vision-data/raw-data/spacenet-dataset/SpaceNet_Buildings_Dataset_Round2/spacenetV2_Train/AOI_2_Vegas'
+image_dir = '/Users/lfishgold/raster-vision-data/raw-data/spacenet-dataset/SpaceNet_Buildings_Dataset_Round2/spacenetV2_Train/AOI_2_Vegas/RGB-PanSharpen/'
 gt_dir = '/Users/lfishgold/raster-vision-data/raw-data/spacenet-dataset/SpaceNet_Buildings_Dataset_Round2/spacenetV2_Train/AOI_2_Vegas/geojson/buildings/'
 
 clear_layers()
@@ -27,8 +26,8 @@ for s in range(max_scenes):
     image_path = join(image_dir, 'RGB-PanSharpen_AOI_2_Vegas_img{}.tif'.format(scene_id))
     gt_path = join(gt_dir, 'buildings_AOI_2_Vegas_img{}.geojson'.format(scene_id))
 
-    # l = iface.addRasterLayer(image_path, scene_id + '-image')
-    # l = iface.addRasterLayer(gt_path, scene_id + '-gt')
+    l = iface.addRasterLayer(image_path, scene_id + '-image')
+    l = iface.addVectorLayer(gt_path, scene_id + '-gt', 'ogr')
     l = iface.addRasterLayer(predict_path, scene_id + '-predict')
-    # l.loadNamedStyle(style_uri)
+    l.loadNamedStyle(style_uri)
 iface.zoomToActiveLayer()
