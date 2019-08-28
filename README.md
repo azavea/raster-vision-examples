@@ -10,6 +10,7 @@ Table of Contents:
 - [Setup and Requirements](#setup-and-requirements)
 - [How to Run an Example](#how-to-run-an-example)
     - [SpaceNet Rio Building Chip Classification (demonstrates data prep)](#spacenet-rio-building-chip-classification)
+- [Visualization using QGIS](#visualization-using-qgis)
 - [Other examples](#other-examples)
     - [SpaceNet Rio Building Semantic Segmentation](#spacenet-rio-building-semantic-segmentation)
     - [SpaceNet Vegas](#spacenet-vegas)
@@ -190,16 +191,13 @@ After everything completes, which should take about 1.5 hours if you're running 
 ]
 ```
 
-⚠️ The QGIS plugin does not work with Raster Vision 0.9 (the latest release) yet. We plan on updating it soon. In the mean time, the following instructions  will not work.
-
-~~Optional: To see validation scene images and predictions on a map, we can utilize the [QGIS plugin](https://github.com/azavea/raster-vision-qgis).
-A walkthrough of using QGIS to inspect these results can be found [in the QGIS plugin README](https://github.com/azavea/raster-vision-qgis#tutorial-view-spacenet-building-chip-classification). Viewing the validation scene results for scene ID `013022232023` looks like this:~~
-
-![QGIS results explorer](img/qgis-spacenet-cc.png)
-
 #### Step 6: Predict on new imagery
 
 After running an experiment, a *predict package* is saved into `$root_uri/bundle/spacenet-rio-chip-classification/`. This can be used to make predictions on new images. See the [Model Zoo](#model-zoo) section for more details.
+
+## Visualization using QGIS
+
+To visualize a Raster Vision experiment, you can use [QGIS](https://qgis.org/en/site/) to display the imagery, ground truth, and predictions associated with each scene. Although it's possible to just drag and drop files into QGIS, it's often more convenient to write a script to do this. Here is an example of a [script](qgis/spacenet_viz.py) to visualize the results for [SpaceNet Vegas Semantic Segmentation](#spacenet-vegas).
 
 ## Other Examples
 
@@ -298,7 +296,6 @@ Below are sample predictions and eval metrics.
 ```
 
 </details>
-
 
 #### SpaceNet Vegas Roads and Buildings: All Tasks <a name="spacenet-vegas-all-tasks"></a>
 
