@@ -28,8 +28,9 @@ class CowcObjectDetectionExperiments(rv.ExperimentSet):
         if test:
             exp_id += '-test'
             num_steps = 1
-            batch_size = 1
+            batch_size = 2
             debug = True
+
             train_scene_ids = train_scene_ids[0:1]
             val_scene_ids = val_scene_ids[0:1]
 

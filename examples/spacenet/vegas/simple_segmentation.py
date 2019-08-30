@@ -51,8 +51,8 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
         # The exp_id will be the label associated with this experiment, it will be used
         # to name the experiment config json.
         exp_id = 'spacenet-simple-seg'
-        # Number of times passing a batch of images through the model
-        num_steps = 1e5
+        # Number of times to go through the entire dataset during training.
+        num_epochs = 10
         # Number of images in each batch
         batch_size = 8
         # Specify whether or not to make debug chips (a zipped sample of png chips
@@ -68,8 +68,8 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
         test = str_to_bool(test)
         if test:
             exp_id += '-test'
-            num_steps = 1
-            batch_size = 1
+            num_epochs = 1
+            batch_size = 2
             debug = True
             scene_ids = scene_ids[0:10]
 
@@ -110,19 +110,16 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
 
         # Next we will create a backend that is built on top of a third-party
         # deep learning library. In this case we will construct the
-        # BackendConfig for DeepLab, which is the default semantic segmentation
-        # option for Raster Vision. We use 'with_' methods for additional
-        # configuration including the training parameters we specified above
-        # and the model defaults. Raster Vision has several different default
-        # architecture options for each task. They are stored in a JSON here:
-        # https://github.com/azavea/raster-vision/blob/60f741e30a016f25d2643a9b32916adb22e42d50/rastervision/backend/model_defaults.json
-        backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
-                                  .with_task(task) \
-                                  .with_model_defaults(rv.MOBILENET_V2) \
-                                  .with_num_steps(num_steps) \
-                                  .with_batch_size(batch_size) \
-                                  .with_debug(debug) \
-                                  .build()
+        # BackendConfig for the fastai semantic segmentation backend.
+        backend = rv.BackendConfig.builder(rv.FASTAI_SEMANTIC_SEGMENTATION) \
+            .with_task(task) \
+            .with_train_options(
+                lr=1e-4,
+                batch_size=batch_size,
+                num_epochs=num_epochs,
+                model_arch='resnet18',
+                debug=debug) \
+            .build()
 
         # We will use this function to create a list of scenes that we will pass
         # to the DataSetConfig builder.

@@ -29,7 +29,7 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
 
         if test:
             exp_id += '-test'
-            batch_size = 1
+            batch_size = 2
             num_steps = 1
             debug = True
             train_scene_info = train_scene_info[0:1]

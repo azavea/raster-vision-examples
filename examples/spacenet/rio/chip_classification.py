@@ -4,11 +4,11 @@ from os.path import join
 import rastervision as rv
 from examples.utils import get_scene_info, str_to_bool, save_image_crop
 
-aoi_path = 'AOI_1_Rio/srcData/buildingLabels/Rio_OUTLINE_Public_AOI.geojson'
+aoi_path = 'AOIs/AOI_1_Rio/srcData/buildingLabels/Rio_OUTLINE_Public_AOI.geojson'
 
 
 class ChipClassificationExperiments(rv.ExperimentSet):
-    def exp_main(self, raw_uri, processed_uri, root_uri, test=False):
+    def exp_main(self, raw_uri, processed_uri, root_uri, test=False, use_tf=False):
         """Chip classification experiment on Spacenet Rio dataset.
 
         Run the data prep notebook before running this experiment. Note all URIs can be
@@ -20,19 +20,17 @@ class ChipClassificationExperiments(rv.ExperimentSet):
             root_uri: (str) root directory for experiment output
             test: (bool) if True, run a very small experiment as a test and generate
                 debug output
+            use_tf: (bool) if True, use Tensorflow Deeplab backend
         """
         test = str_to_bool(test)
+        use_tf = str_to_bool(use_tf)
         exp_id = 'spacenet-rio-chip-classification'
-        num_epochs = 20
-        batch_size = 16
         debug = False
         train_scene_info = get_scene_info(join(processed_uri, 'train-scenes.csv'))
         val_scene_info = get_scene_info(join(processed_uri, 'val-scenes.csv'))
 
         if test:
             exp_id += '-test'
-            num_epochs = 1
-            batch_size = 1
             debug = True
             train_scene_info = train_scene_info[0:1]
             val_scene_info = val_scene_info[0:1]
@@ -45,34 +43,57 @@ class ChipClassificationExperiments(rv.ExperimentSet):
                             }) \
                             .build()
 
-        backend = rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
-                                  .with_task(task) \
-                                  .with_model_defaults(rv.RESNET50_IMAGENET) \
-                                  .with_debug(debug) \
-                                  .with_batch_size(batch_size) \
-                                  .with_num_epochs(num_epochs) \
-                                  .with_config({
-                                      'trainer': {
-                                          'options': {
-                                              'saveBest': True,
-                                              'lrSchedule': [
-                                                  {
-                                                      'epoch': 0,
-                                                      'lr': 0.0005
-                                                  },
-                                                  {
-                                                      'epoch': 10,
-                                                      'lr': 0.0001
-                                                  },
-                                                  {
-                                                      'epoch': 15,
-                                                      'lr': 0.00001
-                                                  }
-                                              ]
-                                          }
-                                      }
-                                  }, set_missing_keys=True) \
-                                  .build()
+        if use_tf:
+            num_epochs = 20
+            batch_size = 32
+            if test:
+                num_epochs = 1
+                batch_size = 1
+
+            backend = rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
+                .with_task(task) \
+                .with_model_defaults(rv.RESNET50_IMAGENET) \
+                .with_debug(debug) \
+                .with_batch_size(batch_size) \
+                .with_num_epochs(num_epochs) \
+                .with_config({
+                    'trainer': {
+                        'options': {
+                            'saveBest': True,
+                            'lrSchedule': [
+                                {
+                                    'epoch': 0,
+                                    'lr': 0.0005
+                                },
+                                {
+                                    'epoch': 10,
+                                    'lr': 0.0001
+                                },
+                                {
+                                    'epoch': 15,
+                                    'lr': 0.00001
+                                }
+                            ]
+                        }
+                    }
+                }, set_missing_keys=True) \
+                .build()
+        else:
+            num_epochs = 20
+            batch_size = 32
+            if test:
+                num_epochs = 1
+                batch_size = 2
+
+            backend = rv.BackendConfig.builder(rv.FASTAI_CHIP_CLASSIFICATION) \
+                .with_task(task) \
+                .with_train_options(
+                    lr=1e-4,
+                    batch_size=batch_size,
+                    num_epochs=num_epochs,
+                    model_arch='resnet50',
+                    debug=debug) \
+                .build()
 
         def make_scene(scene_info):
             (raster_uri, label_uri) = scene_info
