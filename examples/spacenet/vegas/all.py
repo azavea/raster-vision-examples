@@ -237,53 +237,35 @@ def build_backend(task, test):
 
     if task.task_type == rv.SEMANTIC_SEGMENTATION:
         batch_size = 8
-        num_steps = 1e5
+        num_epochs = 10
         if test:
-            num_steps = 1
             batch_size = 1
+            num_epochs = 1
 
-        backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
-                                  .with_task(task) \
-                                  .with_model_defaults(rv.MOBILENET_V2) \
-                                  .with_num_steps(num_steps) \
-                                  .with_batch_size(batch_size) \
-                                  .with_debug(debug) \
-                                  .build()
+        backend = rv.BackendConfig.builder(rv.FASTAI_SEMANTIC_SEGMENTATION) \
+            .with_task(task) \
+            .with_train_options(
+                lr=1e-4,
+                batch_size=batch_size,
+                num_epochs=num_epochs,
+                model_arch='resnet18',
+                debug=debug) \
+            .build()
     elif task.task_type == rv.CHIP_CLASSIFICATION:
-        batch_size = 8
-        num_epochs = 40
+        num_epochs = 20
+        batch_size = 32
         if test:
             num_epochs = 1
             batch_size = 1
 
-        backend = rv.BackendConfig.builder(rv.KERAS_CLASSIFICATION) \
-                                  .with_task(task) \
-                                  .with_model_defaults(rv.RESNET50_IMAGENET) \
-                                  .with_debug(debug) \
-                                  .with_batch_size(batch_size) \
-                                  .with_num_epochs(num_epochs) \
-                                  .with_config({
-                                      'trainer': {
-                                          'options': {
-                                              'saveBest': True,
-                                              'lrSchedule': [
-                                                  {
-                                                      'epoch': 0,
-                                                      'lr': 0.0005
-                                                  },
-                                                  {
-                                                      'epoch': 15,
-                                                      'lr': 0.0001
-                                                  },
-                                                  {
-                                                      'epoch': 30,
-                                                      'lr': 0.00001
-                                                  }
-                                              ]
-                                          }
-                                      }
-                                  }, set_missing_keys=True) \
-                                  .build()
+        backend = rv.BackendConfig.builder(rv.FASTAI_CHIP_CLASSIFICATION) \
+            .with_task(task) \
+            .with_train_options(
+                batch_size=batch_size,
+                num_epochs=num_epochs,
+                model_arch='resnet18',
+                debug=debug) \
+            .build()
     elif task.task_type == rv.OBJECT_DETECTION:
         batch_size = 8
         num_steps = 1e5

@@ -6,7 +6,7 @@ from examples.utils import str_to_bool, save_image_crop
 
 
 class PotsdamSemanticSegmentation(rv.ExperimentSet):
-    def exp_main(self, raw_uri, processed_uri, root_uri, test=False):
+    def exp_main(self, raw_uri, processed_uri, root_uri, test=False, use_tf=False):
         """Run an experiment on the ISPRS Potsdam dataset.
 
         Uses Tensorflow Deeplab backend with Mobilenet architecture. Should get to
@@ -18,8 +18,10 @@ class PotsdamSemanticSegmentation(rv.ExperimentSet):
             root_uri: (str) root directory for experiment output
             test: (bool) if True, run a very small experiment as a test and generate
                 debug output
+            use_tf: (bool) if True, use Tensorflow Deeplab backend.
         """
         test = str_to_bool(test)
+        use_tf = str_to_bool(use_tf)
         exp_id = 'potsdam-seg'
         train_ids = ['2-10', '2-11', '3-10', '3-11', '4-10', '4-11', '4-12', '5-10',
                      '5-11', '5-12', '6-10', '6-11', '6-7', '6-9', '7-10', '7-11',
@@ -28,14 +30,9 @@ class PotsdamSemanticSegmentation(rv.ExperimentSet):
         # infrared, red, green
         channel_order = [3, 0, 1]
         debug = False
-        batch_size = 8
-        num_steps = 100000
-        model_type = rv.MOBILENET_V2
 
         if test:
             debug = True
-            num_steps = 1
-            batch_size = 1
             train_ids = train_ids[0:1]
             val_ids = val_ids[0:1]
             exp_id += '-test'
@@ -55,15 +52,38 @@ class PotsdamSemanticSegmentation(rv.ExperimentSet):
                             .with_chip_options(window_method='sliding',
                                                stride=300, debug_chip_probability=1.0) \
                             .build()
+        if use_tf:
+            batch_size = 8
+            num_steps = 100000
+            if test:
+                num_steps = 1
+                batch_size = 2
 
-        backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
-                                  .with_task(task) \
-                                  .with_model_defaults(model_type) \
-                                  .with_train_options(sync_interval=600) \
-                                  .with_num_steps(num_steps) \
-                                  .with_batch_size(batch_size) \
-                                  .with_debug(debug) \
-                                  .build()
+            model_type = rv.MOBILENET_V2
+            backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
+                .with_task(task) \
+                .with_model_defaults(model_type) \
+                .with_train_options(sync_interval=600) \
+                .with_num_steps(num_steps) \
+                .with_batch_size(batch_size) \
+                .with_debug(debug) \
+                .build()
+        else:
+            batch_size = 8
+            num_epochs = 10
+            if test:
+                batch_size = 1
+                num_epochs = 1
+
+            backend = rv.BackendConfig.builder(rv.FASTAI_SEMANTIC_SEGMENTATION) \
+                .with_task(task) \
+                .with_train_options(
+                    lr=1e-4,
+                    batch_size=batch_size,
+                    num_epochs=num_epochs,
+                    model_arch='resnet18',
+                    debug=debug) \
+                .build()
 
         def make_scene(id):
             id = id.replace('-', '_')

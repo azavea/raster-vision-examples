@@ -7,27 +7,24 @@ from examples.utils import str_to_bool
 
 
 def build_backend(task, test, learning_rate):
+    debug = False
+    batch_size = 8
+    num_epochs = 10
+
     if test:
         debug = True
-    else:
-        debug = False
+        batch_size = 2
+        num_epochs = 1
 
-    if test:
-        num_steps = 1
-        batch_size = 1
-    else:
-        batch_size = 12
-        num_steps = 1e5
-
-    rate_dict = {'baseLearningRate': str(learning_rate)}
-    backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
-                              .with_task(task) \
-                              .with_model_defaults(rv.MOBILENET_V2) \
-                              .with_num_steps(num_steps) \
-                              .with_batch_size(batch_size) \
-                              .with_config(rate_dict) \
-                              .with_debug(debug) \
-                              .build()
+        backend = rv.BackendConfig.builder(rv.FASTAI_SEMANTIC_SEGMENTATION) \
+            .with_task(task) \
+            .with_train_options(
+                lr=learning_rate,
+                batch_size=batch_size,
+                num_epochs=num_epochs,
+                model_arch='resnet18',
+                debug=debug) \
+            .build()
 
     return backend
 

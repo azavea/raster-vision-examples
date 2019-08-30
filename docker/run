@@ -34,12 +34,17 @@ Options:
 --gpu use the NVIDIA runtime and GPU image
 --name sets the name of the running container
 --jupyter forwards port 8888, mounts ./notebooks to /opt/notebooks, and runs Jupyter
+--debug maps port 3007 on localhost to 3000 inside container
+--tf-gpu use raster-vision-examples-tf-gpu image and nvidia runtime
+--tf-cpu use raster-vision-examples-tf-cpu image
+--pytorch-gpu use raster-vision-examples-pytorch image and nvidia runtime
 
+Note: raster-vision-examples-pytorch image is used by default
 All arguments after above options are passed to 'docker run'.
 "
 }
 
-IMAGE="raster-vision-examples-cpu"
+IMAGE="raster-vision-pytorch"
 RASTER_VISION_DATA_DIR="${RASTER_VISION_DATA_DIR:-${REPO_ROOT}/data}"
 
 # Parse options using scheme in
@@ -62,8 +67,17 @@ do
         TENSORBOARD="-p 6006:6006"
         shift # past argument
         ;;
-        --gpu)
-        IMAGE="raster-vision-examples-gpu"
+        --tf-gpu)
+        IMAGE="raster-vision-examples-tf-gpu"
+        RUNTIME="--runtime=nvidia"
+        shift # past argument
+        ;;
+        --tf-cpu)
+        IMAGE="raster-vision-examples-tf-cpu"
+        shift # past argument
+        ;;
+        --pytorch-gpu)
+        IMAGE="raster-vision-examples-pytorch"
         RUNTIME="--runtime=nvidia"
         shift # past argument
         ;;
@@ -75,6 +89,10 @@ do
         --jupyter)
         JUPYTER="-v ${REPO_ROOT}/notebooks:/opt/notebooks -p 8888:8888"
         CMD=(/run_jupyter.sh --ip 0.0.0.0 --port 8888 --no-browser --allow-root --notebook-dir=/opt/notebooks)
+        shift
+        ;;
+        --debug)
+        DEBUG="-p 3007:3000"
         shift
         ;;
         *) # unknown option
@@ -101,9 +119,9 @@ if [ "${BASH_SOURCE[0]}" = "${0}" ]
 then
     docker run ${RUNTIME} ${NAME} --rm -it \
         -v "${HOME}"/.rastervision:/root/.rastervision \
-       -v "${REPO_ROOT}"/examples:/opt/src/examples \
+        -v "${REPO_ROOT}"/examples:/opt/src/examples \
         -v ${RASTER_VISION_DATA_DIR}:/opt/data \
-        ${TENSORBOARD} ${AWS} ${JUPYTER} ${DOCS} \
+        ${TENSORBOARD} ${AWS} ${JUPYTER} ${DOCS} ${DEBUG} \
         ${RV_SRC_FLAGS} \
         ${IMAGE} "${CMD[@]}"
 fi

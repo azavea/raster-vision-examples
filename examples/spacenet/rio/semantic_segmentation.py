@@ -4,7 +4,7 @@ from os.path import join
 import rastervision as rv
 from examples.utils import get_scene_info, str_to_bool, save_image_crop
 
-aoi_path = 'AOI_1_Rio/srcData/buildingLabels/Rio_OUTLINE_Public_AOI.geojson'
+aoi_path = 'AOIs/AOI_1_Rio/srcData/buildingLabels/Rio_OUTLINE_Public_AOI.geojson'
 
 
 class SemanticSegmentationExperiments(rv.ExperimentSet):
@@ -25,8 +25,7 @@ class SemanticSegmentationExperiments(rv.ExperimentSet):
         exp_id = 'spacenet-rio-semseg'
         debug = False
         batch_size = 8
-        num_steps = 150000
-        model_type = rv.MOBILENET_V2
+        num_epochs = 20
 
         train_scene_info = get_scene_info(join(processed_uri, 'train-scenes.csv'))
         val_scene_info = get_scene_info(join(processed_uri, 'val-scenes.csv'))
@@ -34,8 +33,8 @@ class SemanticSegmentationExperiments(rv.ExperimentSet):
         if test:
             exp_id += '-test'
             debug = True
-            num_steps = 1
-            batch_size = 1
+            num_epochs = 1
+            batch_size = 2
             train_scene_info = train_scene_info[0:1]
             val_scene_info = val_scene_info[0:1]
 
@@ -53,18 +52,15 @@ class SemanticSegmentationExperiments(rv.ExperimentSet):
                                 debug_chip_probability=1.0) \
                             .build()
 
-        backend = rv.BackendConfig.builder(rv.TF_DEEPLAB) \
-                                  .with_task(task) \
-                                  .with_model_defaults(model_type) \
-                                  .with_config({
-                                    'min_scale_factor': '0.75',
-                                    'max_scale_factor': '1.25'},
-                                    ignore_missing_keys=True, set_missing_keys=True) \
-                                  .with_train_options(sync_interval=600) \
-                                  .with_num_steps(num_steps) \
-                                  .with_batch_size(batch_size) \
-                                  .with_debug(debug) \
-                                  .build()
+        backend = rv.BackendConfig.builder(rv.FASTAI_SEMANTIC_SEGMENTATION) \
+            .with_task(task) \
+            .with_train_options(
+                lr=1e-4,
+                batch_size=batch_size,
+                num_epochs=num_epochs,
+                model_arch='resnet18',
+                debug=debug) \
+            .build()
 
         def make_scene(scene_info):
             (raster_uri, label_uri) = scene_info

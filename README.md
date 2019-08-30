@@ -24,6 +24,12 @@ Table of Contents:
 
 ## Setup and Requirements
 
+### ⚠️ PyTorch vs. Tensorflow Backends
+
+Raster Vision is in the process of switching from Tensorflow to PyTorch-based backends. Currently, there is support for chip classification, semantic segmentation, and object detection using Tensorflow, and chip classification, and semantic segmentation using PyTorch. We do not plan to maintain the Tensorflow backends, and they may be removed in the future, so we suggest starting to use the PyTorch ones.
+
+The examples in this repo default to using PyTorch backends, except for the object detection examples. In addition, for two of the examples ([examples.potsdam.semantic_segmentation](examples/potsdam/semantic_segmentation.py) and [examples.spacenet.rio.chip_classification](examples/spacenet/rio/chip_classification.py)), there is a `use_tf` option which allows running it using a Tensorflow backend.
+
 ### Docker
 You'll need `docker` (preferably version 18 or above) installed. After cloning this repo, to build the Docker images, run the following command:
 
@@ -31,7 +37,7 @@ You'll need `docker` (preferably version 18 or above) installed. After cloning t
 > docker/build
 ```
 
-This will pull down the latest `raster-vision:cpu-latest` and `raster-vision:gpu-latest` Docker images and add some of this repo's code to them. Before running the container, set an environment variable to a local directory in which to store data.
+This will pull down the latest `raster-vision:pytorch-latest`, `raster-vision:tf-cpu-latest`, and `raster-vision:tf-gpu-latest` Docker images and add some of this repo's code to them. If you only want the Tensorflow images, use the `--tf` flag, and similar for `--pytorch`. Before running the container, set an environment variable to a local directory in which to store data.
 ```shell
 > export RASTER_VISION_DATA_DIR="/path/to/data"
 ```
@@ -43,7 +49,9 @@ This will mount the following local directories to directories inside the contai
 * `$RASTER_VISION_DATA_DIR -> /opt/data/`
 * `examples/ -> /opt/src/examples/`
 
-This script also has options for forwarding AWS credentials (`--aws`), running Jupyter notebooks (`--jupyter`), running on a GPU (`--gpu`), and others which can be seen below.
+This script also has options for forwarding AWS credentials, running Jupyter notebooks, and switching between different images, which can be seen below.
+
+Remember to use the correct image for the backend you are using!
 
 ```
 > ./docker/run --help
@@ -61,7 +69,12 @@ Options:
 --gpu use the NVIDIA runtime and GPU image
 --name sets the name of the running container
 --jupyter forwards port 8888, mounts ./notebooks to /opt/notebooks, and runs Jupyter
+--debug maps port 3007 on localhost to 3000 inside container
+--tf-gpu use raster-vision-examples-tf-gpu image and nvidia runtime
+--tf-cpu use raster-vision-examples-tf-cpu image
+--pytorch-gpu use raster-vision-examples-pytorch image and nvidia runtime
 
+Note: raster-vision-examples-pytorch image is used by default
 All arguments after above options are passed to 'docker run'.
 ```
 
