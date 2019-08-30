@@ -22,26 +22,34 @@ then
         exit
     fi
 
-    if [ $# -eq 0 -o "${1:-}" = "--cpu" ]
+    if [ $# -eq 0 -o "${1:-}" = "--tf" ]
     then
         if [ -z "$RASTER_VISION_REPO" ]
         then
-            BASE_IMAGE="quay.io/azavea/raster-vision:cpu-latest"
+            BASE_IMAGE="quay.io/azavea/raster-vision:tf-cpu-latest"
         else
-            BASE_IMAGE="raster-vision-cpu"
+            BASE_IMAGE="raster-vision-tf-cpu"
         fi
+        docker build --build-arg BASE_IMAGE="$BASE_IMAGE" -t raster-vision-examples-tf-cpu -f Dockerfile .
 
-        docker build --build-arg BASE_IMAGE="$BASE_IMAGE" -t raster-vision-examples-cpu -f Dockerfile-cpu .
+        if [ -z "$RASTER_VISION_REPO" ]
+        then
+            BASE_IMAGE="quay.io/azavea/raster-vision:tf-gpu-latest"
+        else
+            BASE_IMAGE="raster-vision-tf-gpu"
+        fi
+        docker build --build-arg BASE_IMAGE="$BASE_IMAGE" -t raster-vision-examples-tf-gpu -f Dockerfile .
     fi
-    if [ $# -eq 0 -o "${1:-}" = "--gpu" ]
+
+    if [ $# -eq 0 -o "${1:-}" = "--pytorch" ]
     then
         if [ -z "$RASTER_VISION_REPO" ]
         then
-            BASE_IMAGE="quay.io/azavea/raster-vision:gpu-latest"
+            BASE_IMAGE="quay.io/azavea/raster-vision:pytorch-latest"
         else
-            BASE_IMAGE="raster-vision-gpu"
+            BASE_IMAGE="raster-vision-pytorch"
         fi
 
-        docker build --build-arg BASE_IMAGE="$BASE_IMAGE" -t raster-vision-examples-gpu -f Dockerfile-gpu .
+        docker build --build-arg BASE_IMAGE="$BASE_IMAGE" -t raster-vision-examples-pytorch -f Dockerfile .
     fi
 fi
