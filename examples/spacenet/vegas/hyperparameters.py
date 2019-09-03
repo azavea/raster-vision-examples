@@ -16,7 +16,7 @@ def build_backend(task, test, learning_rate):
         batch_size = 2
         num_epochs = 1
 
-        backend = rv.BackendConfig.builder(rv.FASTAI_SEMANTIC_SEGMENTATION) \
+        backend = rv.BackendConfig.builder(rv.PYTORCH_SEMANTIC_SEGMENTATION) \
             .with_task(task) \
             .with_train_options(
                 lr=learning_rate,

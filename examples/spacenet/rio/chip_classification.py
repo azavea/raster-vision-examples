@@ -85,7 +85,7 @@ class ChipClassificationExperiments(rv.ExperimentSet):
                 num_epochs = 1
                 batch_size = 2
 
-            backend = rv.BackendConfig.builder(rv.FASTAI_CHIP_CLASSIFICATION) \
+            backend = rv.BackendConfig.builder(rv.PYTORCH_CHIP_CLASSIFICATION) \
                 .with_task(task) \
                 .with_train_options(
                     lr=1e-4,

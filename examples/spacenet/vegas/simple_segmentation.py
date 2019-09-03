@@ -110,8 +110,8 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
 
         # Next we will create a backend that is built on top of a third-party
         # deep learning library. In this case we will construct the
-        # BackendConfig for the fastai semantic segmentation backend.
-        backend = rv.BackendConfig.builder(rv.FASTAI_SEMANTIC_SEGMENTATION) \
+        # BackendConfig for the pytorch semantic segmentation backend.
+        backend = rv.BackendConfig.builder(rv.PYTORCH_SEMANTIC_SEGMENTATION) \
             .with_task(task) \
             .with_train_options(
                 lr=1e-4,
