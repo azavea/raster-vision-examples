@@ -242,7 +242,7 @@ def build_backend(task, test):
             batch_size = 1
             num_epochs = 1
 
-        backend = rv.BackendConfig.builder(rv.FASTAI_SEMANTIC_SEGMENTATION) \
+        backend = rv.BackendConfig.builder(rv.PYTORCH_SEMANTIC_SEGMENTATION) \
             .with_task(task) \
             .with_train_options(
                 lr=1e-4,
@@ -258,7 +258,7 @@ def build_backend(task, test):
             num_epochs = 1
             batch_size = 1
 
-        backend = rv.BackendConfig.builder(rv.FASTAI_CHIP_CLASSIFICATION) \
+        backend = rv.BackendConfig.builder(rv.PYTORCH_CHIP_CLASSIFICATION) \
             .with_task(task) \
             .with_train_options(
                 batch_size=batch_size,

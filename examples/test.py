@@ -26,7 +26,7 @@ cfg = [
         'rv_profile': 'tf',
     },
     {
-        'key': 'potsdam-semantic-segmentation-fastai',
+        'key': 'potsdam-semantic-segmentation-pytorch',
         'module': 'examples.potsdam.semantic_segmentation',
         'local': {
             'raw_uri': '/opt/data/raw-data/isprs-potsdam/',
@@ -52,7 +52,7 @@ cfg = [
         'rv_profile': 'tf',
     },
     {
-        'key': 'spacenet-rio-chip-classification-fastai',
+        'key': 'spacenet-rio-chip-classification-pytorch',
         'module': 'examples.spacenet.rio.chip_classification',
         'local': {
             'raw_uri': '/opt/data/raw-data/spacenet-dataset',
@@ -162,6 +162,13 @@ def collect_experiment(key, root_uri, output_dir, get_pred_package=False):
     pprint.pprint(eval_json['overall'], indent=4)
 
 
+def validate_keys(keys):
+    exp_keys = [exp_cfg['key'] for exp_cfg in cfg]
+    invalid_keys = set(keys).difference(exp_keys)
+    if invalid_keys:
+        raise ValueError('{} are invalid keys'.format(', '.join(keys)))
+
+
 @click.group()
 def test():
     pass
@@ -175,6 +182,8 @@ def test():
 @click.option('--commands')
 def run(root_uri, keys, test, remote, commands):
     run_all = len(keys) == 0
+    validate_keys(keys)
+
     if commands is not None:
         commands = commands.split(' ')
     for exp_cfg in cfg:
@@ -190,11 +199,12 @@ def run(root_uri, keys, test, remote, commands):
 @click.option('--get-pred-package', is_flag=True)
 def collect(root_uri, output_dir, keys, get_pred_package):
     run_all = len(keys) == 0
+    validate_keys(keys)
+
     for exp_cfg in cfg:
         key = exp_cfg['key']
         if run_all or key in keys:
             collect_experiment(key, root_uri, output_dir, get_pred_package)
-
 
 if __name__ == '__main__':
     test()

@@ -52,7 +52,7 @@ class SemanticSegmentationExperiments(rv.ExperimentSet):
                                 debug_chip_probability=1.0) \
                             .build()
 
-        backend = rv.BackendConfig.builder(rv.FASTAI_SEMANTIC_SEGMENTATION) \
+        backend = rv.BackendConfig.builder(rv.PYTORCH_SEMANTIC_SEGMENTATION) \
             .with_task(task) \
             .with_train_options(
                 lr=1e-4,
