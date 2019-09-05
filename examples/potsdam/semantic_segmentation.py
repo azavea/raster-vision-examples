@@ -72,7 +72,7 @@ class PotsdamSemanticSegmentation(rv.ExperimentSet):
             batch_size = 8
             num_epochs = 10
             if test:
-                batch_size = 1
+                batch_size = 2
                 num_epochs = 1
 
             backend = rv.BackendConfig.builder(rv.PYTORCH_SEMANTIC_SEGMENTATION) \
