@@ -51,7 +51,7 @@ This will mount the following local directories to directories inside the contai
 
 This script also has options for forwarding AWS credentials, running Jupyter notebooks, and switching between different images, which can be seen below.
 
-Remember to use the correct image for the backend you are using!
+**Remember to use the correct image for the backend you are using!**
 
 ```
 > ./docker/run --help

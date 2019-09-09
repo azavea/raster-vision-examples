@@ -78,7 +78,7 @@ cfg = [
         'rv_profile': 'tf',
     },
     {
-        'key': 'spacenet-vegas-simple-segmentation',
+        'key': 'spacenet-vegas-simple-segmentation-pytorch',
         'module': 'examples.spacenet.vegas.simple_segmentation',
         'local': {
             'raw_uri': '/opt/data/raw-data/spacenet-dataset',
@@ -88,7 +88,7 @@ cfg = [
         },
     },
     {
-        'key': 'xview-object-detection',
+        'key': 'xview-object-detection-tf',
         'module': 'examples.xview.object_detection',
         'local': {
             'raw_uri': 's3://raster-vision-xview-example/raw-data',
@@ -166,7 +166,7 @@ def validate_keys(keys):
     exp_keys = [exp_cfg['key'] for exp_cfg in cfg]
     invalid_keys = set(keys).difference(exp_keys)
     if invalid_keys:
-        raise ValueError('{} are invalid keys'.format(', '.join(keys)))
+        raise ValueError('{} are invalid keys'.format(', '.join(invalid_keys)))
 
 
 @click.group()
