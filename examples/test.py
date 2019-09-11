@@ -78,14 +78,32 @@ cfg = [
         'rv_profile': 'tf',
     },
     {
-        'key': 'spacenet-vegas-simple-segmentation-pytorch',
-        'module': 'examples.spacenet.vegas.simple_segmentation',
+        'key': 'spacenet-vegas-buildings-semantic-segmentation-pytorch',
+        'module': 'examples.spacenet.vegas.all',
         'local': {
             'raw_uri': '/opt/data/raw-data/spacenet-dataset',
+            'processed_uri': '/opt/data/examples/spacenet/vegas/processed-data',
         },
         'remote': {
             'raw_uri': 's3://spacenet-dataset/',
+            'processed_uri': 's3://raster-vision-lf-dev/examples/spacenet/vegas/processed-data',
         },
+        'extra_args': [['target', 'buildings'],
+                       ['task_type', 'semantic_segmentation']]
+    },
+    {
+        'key': 'spacenet-vegas-roads-semantic-segmentation-pytorch',
+        'module': 'examples.spacenet.vegas.all',
+        'local': {
+            'raw_uri': '/opt/data/raw-data/spacenet-dataset',
+            'processed_uri': '/opt/data/examples/spacenet/vegas/processed-data',
+        },
+        'remote': {
+            'raw_uri': 's3://spacenet-dataset/',
+            'processed_uri': 's3://raster-vision-lf-dev/examples/spacenet/vegas/processed-data',
+        },
+        'extra_args': [['target', 'roads'],
+                       ['task_type', 'semantic_segmentation']]
     },
     {
         'key': 'xview-object-detection-tf',
@@ -119,7 +137,7 @@ def run_experiment(exp_cfg, root_uri, test=True, remote=False, commands=None):
     if extra_args:
         for k, v in extra_args:
             cmd += ['-a', str(k), str(v)]
-    cmd += ['--splits', '2']
+    cmd += ['--splits', '2', '-x']
     if commands is not None:
         cmd += ['-r'] + commands
 
