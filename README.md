@@ -593,6 +593,17 @@ Note that the input file is assumed to have the same channel order and statistic
 
 **Disclaimer**: These models are provided for testing and demonstration purposes and aren't particularly accurate. As is usually the case for deep learning models, the accuracy drops greatly when used on input that is outside the training distribution. In other words, a model trained in one city probably won't work well in another city (unless they are very similar) or at a different imagery resolution.
 
+### PyTorch Models
+
+| Dataset | Task | Model | Prediction Package | Sample Image | Model (for fine-tuning) |
+| --- | --- | --- | --- | --- | --- |
+| SpaceNet Rio Buildings | Chip Classification | Resnet50 | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/rio-cc-pytorch/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/rio-cc/013022223130_sample.tif) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/rio-cc-pytorch/model) |
+| SpaceNet Vegas Buildings | Semantic Segmentation | UNet/Resnet18 | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg-pytorch/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg/1929.tif) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg-pytorch/model) |
+| SpaceNet Vegas Roads | Semantic Segmentation | UNet/Resnet18 | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-road-seg-pytorch/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-road-seg/524.tif) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-road-seg-pytorch/model) |
+| ISPRS Potsdam | Semantic Segmentation | UNet/Resnet18 | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/potsdam-seg-pytorch/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/potsdam-seg/3_12_sample.tif) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/potsdam-seg-pytorch/model) |
+
+
+### Tensorflow Models
 
 | Dataset | Task | Model | Prediction Package | Sample Image | Model (for fine-tuning) |
 | --- | --- | --- | --- | --- | --- |
