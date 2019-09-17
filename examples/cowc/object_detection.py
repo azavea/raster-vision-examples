@@ -6,7 +6,7 @@ from examples.utils import str_to_bool, save_image_crop
 
 
 class CowcObjectDetectionExperiments(rv.ExperimentSet):
-    def exp_main(self, raw_uri, processed_uri, root_uri, test=False):
+    def exp_main(self, raw_uri, processed_uri, root_uri, test=False, use_tf=False):
         """Object detection on COWC (Cars Overhead with Context) Potsdam dataset
 
         Args:
@@ -17,7 +17,7 @@ class CowcObjectDetectionExperiments(rv.ExperimentSet):
                 debug output
         """
         test = str_to_bool(test)
-        exp_id = 'cowc-object-detection'
+        exp_id = 'cowc-object-detection2'
         num_steps = 100000
         batch_size = 8
         debug = False
@@ -38,18 +38,37 @@ class CowcObjectDetectionExperiments(rv.ExperimentSet):
                             .with_chip_size(300) \
                             .with_classes({'vehicle': (1, 'red')}) \
                             .with_chip_options(neg_ratio=1.0,
-                                               ioa_thresh=0.8) \
+                                               ioa_thresh=0.5) \
                             .with_predict_options(merge_thresh=0.1,
                                                   score_thresh=0.5) \
                             .build()
 
-        backend = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
-                                  .with_task(task) \
-                                  .with_model_defaults(rv.SSD_MOBILENET_V1_COCO) \
-                                  .with_debug(debug) \
-                                  .with_batch_size(batch_size) \
-                                  .with_num_steps(num_steps) \
-                                  .build()
+        if use_tf:
+            backend = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
+                                        .with_task(task) \
+                                        .with_model_defaults(rv.SSD_MOBILENET_V1_COCO) \
+                                        .with_debug(debug) \
+                                        .with_batch_size(batch_size) \
+                                        .with_num_steps(num_steps) \
+                                        .build()
+        else:
+            batch_size = 16
+            num_epochs = 10
+            if test:
+                batch_size = 2
+                num_epochs = 2
+
+            backend = rv.BackendConfig.builder(rv.PYTORCH_OBJECT_DETECTION) \
+                .with_task(task) \
+                .with_train_options(
+                    lr=2e-4,
+                    one_cycle=True,
+                    batch_size=batch_size,
+                    num_epochs=num_epochs,
+                    model_arch='resnet18',
+                    debug=debug,
+                    run_tensorboard=False) \
+                .build()
 
         def make_scene(id):
             raster_uri = join(

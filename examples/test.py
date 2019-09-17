@@ -1,5 +1,5 @@
 import subprocess
-from os.path import join
+from os.path import join, basename, dirname
 import json
 import pprint
 import glob
@@ -13,7 +13,7 @@ from rastervision.utils.files import (
 
 cfg = [
     {
-        'key': 'cowc-object-detection',
+        'key': 'cowc-object-detection-tf',
         'module': 'examples.cowc.object_detection',
         'local': {
             'raw_uri': '/opt/data/raw-data/isprs-potsdam/',
@@ -23,7 +23,20 @@ cfg = [
             'raw_uri': 's3://raster-vision-raw-data/isprs-potsdam',
             'processed_uri': 's3://raster-vision-lf-dev/examples/cowc-potsdam/processed-data',
         },
+        'extra_args': [['use_tf', 'True']],
         'rv_profile': 'tf',
+    },
+    {
+        'key': 'cowc-object-detection-pytorch',
+        'module': 'examples.cowc.object_detection',
+        'local': {
+            'raw_uri': '/opt/data/raw-data/isprs-potsdam/',
+            'processed_uri': '/opt/data/examples/cowc-potsdam/processed-data',
+        },
+        'remote': {
+            'raw_uri': 's3://raster-vision-raw-data/isprs-potsdam',
+            'processed_uri': 's3://raster-vision-lf-dev/examples/cowc-potsdam/processed-data',
+        },
     },
     {
         'key': 'potsdam-semantic-segmentation-pytorch',
@@ -223,6 +236,18 @@ def collect(root_uri, output_dir, keys, get_pred_package):
         key = exp_cfg['key']
         if run_all or key in keys:
             collect_experiment(key, root_uri, output_dir, get_pred_package)
+
+
+@test.command()
+@click.argument('root_uri')
+def collect_eval_dir(root_uri):
+    eval_json_uris = list_paths(join(root_uri, 'eval'), ext='eval.json')
+    for eval_json_uri in eval_json_uris:
+        eval_json = file_to_json(eval_json_uri)
+        print(basename(dirname(eval_json_uri)))
+        print(eval_json['overall'][-1]['f1'])
+        print()
+
 
 if __name__ == '__main__':
     test()
