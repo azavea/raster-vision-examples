@@ -37,10 +37,10 @@ class CowcObjectDetectionExperiments(rv.ExperimentSet):
         task = rv.TaskConfig.builder(rv.OBJECT_DETECTION) \
                             .with_chip_size(300) \
                             .with_classes({'vehicle': (1, 'red')}) \
-                            .with_chip_options(neg_ratio=1.0,
-                                               ioa_thresh=0.5) \
-                            .with_predict_options(merge_thresh=0.1,
-                                                  score_thresh=0.5) \
+                            .with_chip_options(neg_ratio=5.0,
+                                               ioa_thresh=0.9) \
+                            .with_predict_options(merge_thresh=0.5,
+                                                  score_thresh=0.9) \
                             .build()
 
         if use_tf:
