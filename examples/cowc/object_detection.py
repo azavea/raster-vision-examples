@@ -15,6 +15,7 @@ class CowcObjectDetectionExperiments(rv.ExperimentSet):
             root_uri: (str) root directory for experiment output
             test: (bool) if True, run a very small experiment as a test and generate
                 debug output
+            use_tf: (bool) if True, use Tensorflow-based backend
         """
         test = str_to_bool(test)
         exp_id = 'cowc-object-detection2'

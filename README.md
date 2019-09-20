@@ -26,9 +26,7 @@ Table of Contents:
 
 ### ⚠️ PyTorch vs. Tensorflow Backends
 
-Raster Vision is in the process of switching from Tensorflow to PyTorch-based backends. Currently, there is support for chip classification, semantic segmentation, and object detection using Tensorflow, and chip classification, and semantic segmentation using PyTorch. We do not plan to maintain the Tensorflow backends, and they may be removed in the future, so we suggest starting to use the PyTorch ones.
-
-The examples in this repo default to using PyTorch backends, except for the object detection examples. In addition, for two of the examples ([examples.potsdam.semantic_segmentation](examples/potsdam/semantic_segmentation.py) and [examples.spacenet.rio.chip_classification](examples/spacenet/rio/chip_classification.py)), there is a `use_tf` option which allows running it using a Tensorflow backend.
+We have recently added a set of PyTorch-based backends to Raster Vision. The existing Tensorflow-based backends are still there, but we do not plan on maintaining them, so we suggest starting to use the PyTorch ones. The examples in this repo default to using the PyTorch backends. However, for three of the examples there is a `use_tf` option which allows running it using a Tensorflow backend: [examples.cowc.object_detection](examples/potsdam/object_detection.py), [examples.potsdam.semantic_segmentation](examples/potsdam/semantic_segmentation.py), and [examples.spacenet.rio.chip_classification](examples/spacenet/rio/chip_classification.py).
 
 ### Docker
 You'll need `docker` (preferably version 18 or above) installed. After cloning this repo, to build the Docker images, run the following command:
@@ -601,7 +599,6 @@ Note that the input file is assumed to have the same channel order and statistic
 | SpaceNet Vegas Buildings | Semantic Segmentation | UNet/Resnet18 | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg-pytorch/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg/1929.tif) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg-pytorch/model) |
 | SpaceNet Vegas Roads | Semantic Segmentation | UNet/Resnet18 | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-road-seg-pytorch/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-road-seg/524.tif) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-road-seg-pytorch/model) |
 | ISPRS Potsdam | Semantic Segmentation | UNet/Resnet18 | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/potsdam-seg-pytorch/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/potsdam-seg/3_12_sample.tif) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/potsdam-seg-pytorch/model) |
-
 
 ### Tensorflow Models
 
