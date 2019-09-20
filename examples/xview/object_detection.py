@@ -21,8 +21,8 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
         """
         test = str_to_bool(test)
         exp_id = 'xview-vehicles'
-        num_steps = 100000
         batch_size = 16
+        num_epochs = 20
         debug = False
         train_scene_info = get_scene_info(join(processed_uri, 'train-scenes.csv'))
         val_scene_info = get_scene_info(join(processed_uri, 'val-scenes.csv'))
@@ -30,7 +30,7 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
         if test:
             exp_id += '-test'
             batch_size = 2
-            num_steps = 1
+            num_epochs = 2
             debug = True
             train_scene_info = train_scene_info[0:1]
             val_scene_info = val_scene_info[0:1]
@@ -44,13 +44,17 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
                                                   score_thresh=0.5) \
                             .build()
 
-        backend = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
-                                  .with_task(task) \
-                                  .with_debug(debug) \
-                                  .with_batch_size(batch_size) \
-                                  .with_num_steps(num_steps) \
-                                  .with_model_defaults(rv.SSD_MOBILENET_V1_COCO) \
-                                  .build()
+        backend = rv.BackendConfig.builder(rv.PYTORCH_OBJECT_DETECTION) \
+            .with_task(task) \
+            .with_train_options(
+                lr=2e-4,
+                one_cycle=True,
+                batch_size=batch_size,
+                num_epochs=num_epochs,
+                model_arch='resnet18',
+                debug=debug,
+                run_tensorboard=False) \
+            .build()
 
         def make_scene(scene_info):
             (raster_uri, label_uri) = scene_info
