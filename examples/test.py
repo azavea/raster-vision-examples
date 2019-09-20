@@ -1,5 +1,5 @@
 import subprocess
-from os.path import join
+from os.path import join, basename, dirname
 import json
 import pprint
 import glob
@@ -13,7 +13,7 @@ from rastervision.utils.files import (
 
 cfg = [
     {
-        'key': 'cowc-object-detection',
+        'key': 'cowc-object-detection-tf',
         'module': 'examples.cowc.object_detection',
         'local': {
             'raw_uri': '/opt/data/raw-data/isprs-potsdam/',
@@ -23,7 +23,20 @@ cfg = [
             'raw_uri': 's3://raster-vision-raw-data/isprs-potsdam',
             'processed_uri': 's3://raster-vision-lf-dev/examples/cowc-potsdam/processed-data',
         },
+        'extra_args': [['use_tf', 'True']],
         'rv_profile': 'tf',
+    },
+    {
+        'key': 'cowc-object-detection-pytorch',
+        'module': 'examples.cowc.object_detection',
+        'local': {
+            'raw_uri': '/opt/data/raw-data/isprs-potsdam/',
+            'processed_uri': '/opt/data/examples/cowc-potsdam/processed-data',
+        },
+        'remote': {
+            'raw_uri': 's3://raster-vision-raw-data/isprs-potsdam',
+            'processed_uri': 's3://raster-vision-lf-dev/examples/cowc-potsdam/processed-data',
+        },
     },
     {
         'key': 'potsdam-semantic-segmentation-pytorch',
@@ -78,17 +91,35 @@ cfg = [
         'rv_profile': 'tf',
     },
     {
-        'key': 'spacenet-vegas-simple-segmentation',
-        'module': 'examples.spacenet.vegas.simple_segmentation',
+        'key': 'spacenet-vegas-buildings-semantic-segmentation-pytorch',
+        'module': 'examples.spacenet.vegas.all',
         'local': {
             'raw_uri': '/opt/data/raw-data/spacenet-dataset',
+            'processed_uri': '/opt/data/examples/spacenet/vegas/processed-data',
         },
         'remote': {
             'raw_uri': 's3://spacenet-dataset/',
+            'processed_uri': 's3://raster-vision-lf-dev/examples/spacenet/vegas/processed-data',
         },
+        'extra_args': [['target', 'buildings'],
+                       ['task_type', 'semantic_segmentation']]
     },
     {
-        'key': 'xview-object-detection',
+        'key': 'spacenet-vegas-roads-semantic-segmentation-pytorch',
+        'module': 'examples.spacenet.vegas.all',
+        'local': {
+            'raw_uri': '/opt/data/raw-data/spacenet-dataset',
+            'processed_uri': '/opt/data/examples/spacenet/vegas/processed-data',
+        },
+        'remote': {
+            'raw_uri': 's3://spacenet-dataset/',
+            'processed_uri': 's3://raster-vision-lf-dev/examples/spacenet/vegas/processed-data',
+        },
+        'extra_args': [['target', 'roads'],
+                       ['task_type', 'semantic_segmentation']]
+    },
+    {
+        'key': 'xview-object-detection-tf',
         'module': 'examples.xview.object_detection',
         'local': {
             'raw_uri': 's3://raster-vision-xview-example/raw-data',
@@ -119,7 +150,7 @@ def run_experiment(exp_cfg, root_uri, test=True, remote=False, commands=None):
     if extra_args:
         for k, v in extra_args:
             cmd += ['-a', str(k), str(v)]
-    cmd += ['--splits', '2']
+    cmd += ['--splits', '2', '-x']
     if commands is not None:
         cmd += ['-r'] + commands
 
@@ -166,7 +197,7 @@ def validate_keys(keys):
     exp_keys = [exp_cfg['key'] for exp_cfg in cfg]
     invalid_keys = set(keys).difference(exp_keys)
     if invalid_keys:
-        raise ValueError('{} are invalid keys'.format(', '.join(keys)))
+        raise ValueError('{} are invalid keys'.format(', '.join(invalid_keys)))
 
 
 @click.group()
@@ -205,6 +236,18 @@ def collect(root_uri, output_dir, keys, get_pred_package):
         key = exp_cfg['key']
         if run_all or key in keys:
             collect_experiment(key, root_uri, output_dir, get_pred_package)
+
+
+@test.command()
+@click.argument('root_uri')
+def collect_eval_dir(root_uri):
+    eval_json_uris = list_paths(join(root_uri, 'eval'), ext='eval.json')
+    for eval_json_uri in eval_json_uris:
+        eval_json = file_to_json(eval_json_uri)
+        print(basename(dirname(eval_json_uri)))
+        print(eval_json['overall'][-1]['f1'])
+        print()
+
 
 if __name__ == '__main__':
     test()
