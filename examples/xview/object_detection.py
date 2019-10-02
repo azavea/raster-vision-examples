@@ -47,13 +47,12 @@ class ObjectDetectionExperiments(rv.ExperimentSet):
         backend = rv.BackendConfig.builder(rv.PYTORCH_OBJECT_DETECTION) \
             .with_task(task) \
             .with_train_options(
-                lr=2e-4,
+                lr=1e-4,
                 one_cycle=True,
                 batch_size=batch_size,
                 num_epochs=num_epochs,
                 model_arch='resnet18',
-                debug=debug,
-                run_tensorboard=False) \
+                debug=debug) \
             .build()
 
         def make_scene(scene_info):

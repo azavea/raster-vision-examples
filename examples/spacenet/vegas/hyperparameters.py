@@ -22,7 +22,7 @@ def build_backend(task, test, learning_rate):
                 lr=learning_rate,
                 batch_size=batch_size,
                 num_epochs=num_epochs,
-                model_arch='resnet18',
+                model_arch='resnet50',
                 debug=debug) \
             .build()
 

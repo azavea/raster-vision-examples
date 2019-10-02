@@ -419,8 +419,6 @@ Arguments:
 * `raw_uri` should contain `4_Ortho_RGBIR` and `5_Labels_for_participants` subdirectories.
 * `processed_uri` should be set to a directory which will be used to store test crops.
 
-The full experiment runs a Mobilenet using the Tensorflow Deeplab backend for 100k steps, which takes about six hours to train on an AWS P3 instance.
-
 Below are sample predictions and eval metrics.
 
 ![Potsdam segmentation predictions](img/potsdam-seg-predictions.png)
@@ -429,69 +427,188 @@ Below are sample predictions and eval metrics.
 
 ```javascript
 [
-    {
-        "precision": 0.8656729563616176,
-        "gt_count": 1746655,
-        "class_id": 1,
-        "recall": 0.8081258176342782,
-        "count_error": 200350.09143477102,
-        "class_name": "Car",
-        "f1": 0.8351868892794376
-    },
-    {
-        "precision": 0.9077043151132905,
-        "gt_count": 28166583,
-        "class_id": 2,
-        "recall": 0.9453450210840271,
-        "count_error": 1496358.1113330645,
-        "class_name": "Building",
-        "f1": 0.9259374145605163
-    },
-    {
-        "precision": 0.8105826727015737,
-        "gt_count": 30140893,
-        "class_id": 3,
-        "recall": 0.8826813459043832,
-        "count_error": 3813131.239710051,
-        "class_name": "Low Vegetation",
-        "f1": 0.8448803483993653
-    },
-    {
-        "precision": 0.8853166963497794,
-        "gt_count": 16928529,
-        "class_id": 4,
-        "recall": 0.7333917790494379,
-        "count_error": 2298428.025324646,
-        "class_name": "Tree",
-        "f1": 0.798672495115001
-    },
-    {
-        "precision": 0.8905422564785969,
-        "gt_count": 29352493,
-        "class_id": 5,
-        "recall": 0.8771725795147962,
-        "count_error": 2346809.6169586345,
-        "class_name": "Impervious",
-        "f1": 0.883793546499612
-    },
-    {
-        "precision": 0.40612390917761676,
-        "gt_count": 1664847,
-        "class_id": 6,
-        "recall": 0.3042724046113547,
-        "count_error": 759642.5306962142,
-        "class_name": "Clutter",
-        "f1": 0.3474061991276365
-    },
-    {
-        "precision": 0.8640141242953602,
-        "gt_count": 108000000,
-        "class_id": null,
-        "recall": 0.8640043796296297,
-        "count_error": 2467470.602260491,
-        "class_name": "average",
-        "f1": 0.8615277511625675
-    }
+        {
+            "precision": 0.9003686311706696,
+            "recall": 0.8951149482868683,
+            "f1": 0.8973353554371246,
+            "count_error": 129486.40233074076,
+            "gt_count": 1746655.0,
+            "conf_mat": [
+                0.0,
+                1563457.0,
+                7796.0,
+                5679.0,
+                10811.0,
+                126943.0,
+                31969.0
+            ],
+            "class_id": 1,
+            "class_name": "Car"
+        },
+        {
+            "precision": 0.9630047813515502,
+            "recall": 0.9427071079228886,
+            "f1": 0.9525027991356272,
+            "count_error": 1000118.8466519706,
+            "gt_count": 28166583.0,
+            "conf_mat": [
+                0.0,
+                6976.0,
+                26552838.0,
+                743241.0,
+                71031.0,
+                556772.0,
+                235725.0
+            ],
+            "class_id": 2,
+            "class_name": "Building"
+        },
+        {
+            "precision": 0.8466609755403327,
+            "recall": 0.8983221897241067,
+            "f1": 0.8715991836041085,
+            "count_error": 3027173.8852443425,
+            "gt_count": 30140893.0,
+            "conf_mat": [
+                0.0,
+                4306.0,
+                257258.0,
+                27076233.0,
+                1405095.0,
+                1110647.0,
+                287354.0
+            ],
+            "class_id": 3,
+            "class_name": "Low Vegetation"
+        },
+        {
+            "precision": 0.883517319858661,
+            "recall": 0.8089167109558072,
+            "f1": 0.8439042868078945,
+            "count_error": 1882745.6869677808,
+            "gt_count": 16928529.0,
+            "conf_mat": [
+                0.0,
+                34522.0,
+                157012.0,
+                2484523.0,
+                13693770.0,
+                485790.0,
+                72912.0
+            ],
+            "class_id": 4,
+            "class_name": "Tree"
+        },
+        {
+            "precision": 0.9123212945945467,
+            "recall": 0.9110533473255575,
+            "f1": 0.9115789047144218,
+            "count_error": 1785561.1048684688,
+            "gt_count": 29352493.0,
+            "conf_mat": [
+                0.0,
+                99015.0,
+                451628.0,
+                1307686.0,
+                262292.0,
+                26741687.0,
+                490185.0
+            ],
+            "class_id": 5,
+            "class_name": "Impervious"
+        },
+        {
+            "precision": 0.42014399072332975,
+            "recall": 0.47418711749488085,
+            "f1": 0.44406088467218563,
+            "count_error": 787395.6814824425,
+            "gt_count": 1664847.0,
+            "conf_mat": [
+                0.0,
+                28642.0,
+                157364.0,
+                340012.0,
+                59034.0,
+                290346.0,
+                789449.0
+            ],
+            "class_id": 6,
+            "class_name": "Clutter"
+        },
+        {
+            "precision": 0.8949197573420392,
+            "recall": 0.8927540185185187,
+            "f1": 0.8930493260224918,
+            "count_error": 1900291.674768574,
+            "gt_count": 108000000.0,
+            "conf_mat": [
+                [
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0
+                ],
+                [
+                    0.0,
+                    1563457.0,
+                    7796.0,
+                    5679.0,
+                    10811.0,
+                    126943.0,
+                    31969.0
+                ],
+                [
+                    0.0,
+                    6976.0,
+                    26552838.0,
+                    743241.0,
+                    71031.0,
+                    556772.0,
+                    235725.0
+                ],
+                [
+                    0.0,
+                    4306.0,
+                    257258.0,
+                    27076233.0,
+                    1405095.0,
+                    1110647.0,
+                    287354.0
+                ],
+                [
+                    0.0,
+                    34522.0,
+                    157012.0,
+                    2484523.0,
+                    13693770.0,
+                    485790.0,
+                    72912.0
+                ],
+                [
+                    0.0,
+                    99015.0,
+                    451628.0,
+                    1307686.0,
+                    262292.0,
+                    26741687.0,
+                    490185.0
+                ],
+                [
+                    0.0,
+                    28642.0,
+                    157364.0,
+                    340012.0,
+                    59034.0,
+                    290346.0,
+                    789449.0
+                ]
+            ],
+            "class_id": null,
+            "class_name": "average"
+        }
 ]
 ```
 
@@ -517,22 +634,22 @@ Below are sample predictions and eval metrics.
 
 ```javascript
     {
-        "precision": 0.8516560932239331,
-        "class_name": "vehicle",
+        "precision": 0.9390652367984924,
+        "recall": 0.9524752475247524,
+        "f1": 0.945173902480464,
+        "count_error": 0.015841584158415842,
+        "gt_count": 505.0,
         "class_id": 1,
-        "recall": 0.8495049504950496,
-        "f1": 0.8491190071843167,
-        "gt_count": 505,
-        "count_error": 1.734723475976807e-18
+        "class_name": "vehicle"
     },
     {
-        "precision": 0.8516560932239331,
-        "class_name": "average",
+        "precision": 0.9390652367984924,
+        "recall": 0.9524752475247524,
+        "f1": 0.945173902480464,
+        "count_error": 0.015841584158415842,
+        "gt_count": 505.0,
         "class_id": null,
-        "recall": 0.8495049504950496,
-        "f1": 0.8491190071843167,
-        "gt_count": 505,
-        "count_error": 1.734723475976807e-18
+        "class_name": "average"
     }
 ```
 
@@ -593,12 +710,15 @@ Note that the input file is assumed to have the same channel order and statistic
 
 ### PyTorch Models
 
-| Dataset | Task | Model | Prediction Package | Sample Image | Model (for fine-tuning) |
-| --- | --- | --- | --- | --- | --- |
-| SpaceNet Rio Buildings | Chip Classification | Resnet50 | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/rio-cc-pytorch/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/rio-cc/013022223130_sample.tif) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/rio-cc-pytorch/model) |
-| SpaceNet Vegas Buildings | Semantic Segmentation | UNet/Resnet18 | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg-pytorch/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg/1929.tif) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg-pytorch/model) |
-| SpaceNet Vegas Roads | Semantic Segmentation | UNet/Resnet18 | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-road-seg-pytorch/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-road-seg/524.tif) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-road-seg-pytorch/model) |
-| ISPRS Potsdam | Semantic Segmentation | UNet/Resnet18 | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/potsdam-seg-pytorch/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/potsdam-seg/3_12_sample.tif) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/potsdam-seg-pytorch/model) |
+For the PyTorch models, the prediction package (when unzipped) contains a `model` file which can be used for fine-tuning.
+
+| Dataset | Task | Model | Prediction Package | Sample Image |
+| --- | --- | --- | --- | --- |
+| SpaceNet Rio Buildings | Chip Classification | Resnet50 | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/rio-cc-pytorch/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/rio-cc/013022223130_sample.tif) |
+| SpaceNet Vegas Buildings | Semantic Segmentation | DeeplabV3/Resnet50 | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg-pytorch/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-building-seg/1929.tif) |
+| SpaceNet Vegas Roads | Semantic Segmentation | DeeplabV3/Resnet50 | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-road-seg-pytorch/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/vegas-road-seg/524.tif) |
+| ISPRS Potsdam | Semantic Segmentation | DeeplabV3/Resnet50 | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/potsdam-seg-pytorch/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/potsdam-seg/3_12_sample.tif) |
+| COWC Potsdam (Cars) | Object Detection | Faster-RCNN/Resnet18 | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/cowc-od-pytorch/predict_package.zip) | [link](https://s3.amazonaws.com/azavea-research-public-data/raster-vision/examples/model-zoo/cowc-od/3_10_sample.tif) |
 
 ### Tensorflow Models
 
