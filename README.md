@@ -4,6 +4,7 @@ This repository contains examples of using Raster Vision on open datasets.
 
 Note: The `master` branch of this examples repo should be used in conjunction with the `master` branch (or `latest` Docker image tag) of [Raster Vision](https://github.com/azavea/raster-vision)
 which contains the latest changes. For versions of this examples repo that correspond to stable, released versions of Raster Vision, see:
+* [0.10](https://github.com/azavea/raster-vision-examples/tree/0.10)
 * [0.9](https://github.com/azavea/raster-vision-examples/tree/0.9)
 
 Table of Contents:
