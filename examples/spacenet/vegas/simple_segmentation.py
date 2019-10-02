@@ -52,7 +52,7 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
         # to name the experiment config json.
         exp_id = 'spacenet-simple-seg'
         # Number of times to go through the entire dataset during training.
-        num_epochs = 10
+        num_epochs = 2
         # Number of images in each batch
         batch_size = 8
         # Specify whether or not to make debug chips (a zipped sample of png chips
@@ -117,7 +117,7 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
                 lr=1e-4,
                 batch_size=batch_size,
                 num_epochs=num_epochs,
-                model_arch='resnet18',
+                model_arch='resnet50',
                 debug=debug) \
             .build()
 

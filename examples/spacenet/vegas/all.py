@@ -237,9 +237,9 @@ def build_backend(task, test):
 
     if task.task_type == rv.SEMANTIC_SEGMENTATION:
         batch_size = 8
-        num_epochs = 10
+        num_epochs = 2
         if test:
-            batch_size = 1
+            batch_size = 2
             num_epochs = 1
 
         backend = rv.BackendConfig.builder(rv.PYTORCH_SEMANTIC_SEGMENTATION) \
@@ -248,15 +248,15 @@ def build_backend(task, test):
                 lr=1e-4,
                 batch_size=batch_size,
                 num_epochs=num_epochs,
-                model_arch='resnet18',
+                model_arch='resnet50',
                 debug=debug) \
             .build()
     elif task.task_type == rv.CHIP_CLASSIFICATION:
-        num_epochs = 20
+        num_epochs = 2
         batch_size = 32
         if test:
             num_epochs = 1
-            batch_size = 1
+            batch_size = 2
 
         backend = rv.BackendConfig.builder(rv.PYTORCH_CHIP_CLASSIFICATION) \
             .with_task(task) \
@@ -267,18 +267,21 @@ def build_backend(task, test):
                 debug=debug) \
             .build()
     elif task.task_type == rv.OBJECT_DETECTION:
-        batch_size = 8
-        num_steps = 1e5
+        batch_size = 16
+        num_epochs = 2
         if test:
-            num_steps = 1
             batch_size = 1
+            num_epochs = 2
 
-        backend = rv.BackendConfig.builder(rv.TF_OBJECT_DETECTION) \
+        backend = rv.BackendConfig.builder(rv.PYTORCH_OBJECT_DETECTION) \
             .with_task(task) \
-            .with_model_defaults(rv.SSD_MOBILENET_V1_COCO) \
-            .with_debug(debug) \
-            .with_batch_size(batch_size) \
-            .with_num_steps(num_steps) \
+            .with_train_options(
+                lr=1e-4,
+                one_cycle=True,
+                batch_size=batch_size,
+                num_epochs=num_epochs,
+                model_arch='resnet18',
+                debug=debug) \
             .build()
 
     return backend

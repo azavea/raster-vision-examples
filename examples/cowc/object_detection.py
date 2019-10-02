@@ -18,7 +18,7 @@ class CowcObjectDetectionExperiments(rv.ExperimentSet):
             use_tf: (bool) if True, use Tensorflow-based backend
         """
         test = str_to_bool(test)
-        exp_id = 'cowc-object-detection2'
+        exp_id = 'cowc-object-detection'
         num_steps = 100000
         batch_size = 8
         debug = False
@@ -62,13 +62,12 @@ class CowcObjectDetectionExperiments(rv.ExperimentSet):
             backend = rv.BackendConfig.builder(rv.PYTORCH_OBJECT_DETECTION) \
                 .with_task(task) \
                 .with_train_options(
-                    lr=2e-4,
+                    lr=1e-4,
                     one_cycle=True,
                     batch_size=batch_size,
                     num_epochs=num_epochs,
                     model_arch='resnet18',
-                    debug=debug,
-                    run_tensorboard=False) \
+                    debug=debug) \
                 .build()
 
         def make_scene(id):
