@@ -74,11 +74,11 @@ class VegasRoads(SpacenetConfig):
 
 class VegasBuildings(SpacenetConfig):
     def __init__(self, raw_uri):
-        self.base_dir = 'SpaceNet_Buildings_Dataset_Round2/spacenetV2_Train/AOI_2_Vegas'
-        self.raster_dir = 'RGB-PanSharpen/'
-        self.label_dir = 'geojson/buildings/'
-        self.raster_fn_prefix = 'RGB-PanSharpen_AOI_2_Vegas_img'
-        self.label_fn_prefix = 'buildings_AOI_2_Vegas_img'
+        self.base_dir = 'spacenet/SN2_buildings/train/AOI_2_Vegas'
+        self.raster_dir = 'PS-RGB'
+        self.label_dir = 'geojson_buildings'
+        self.raster_fn_prefix = 'SN2_buildings_train_AOI_2_Vegas_PS-RGB_img'
+        self.label_fn_prefix = 'SN2_buildings_train_AOI_2_Vegas_geojson_buildings_img'
         super().__init__(raw_uri)
 
     def get_class_map(self):

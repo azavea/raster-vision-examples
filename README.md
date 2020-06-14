@@ -111,7 +111,7 @@ The dataset is stored on AWS S3 at `s3://spacenet-dataset`. You will need an AWS
 
 Optional: to run this example with the data stored locally, first copy the data using something like the following inside the container.
 ```
-aws s3 sync s3://spacenet-dataset/AOI_1_Rio/ /opt/data/spacenet-dataset/AOI_1_Rio/
+aws s3 sync s3://spacenet-dataset/AOIs/AOI_1_Rio/ /opt/data/spacenet-dataset/AOIs/AOI_1_Rio/
 ```
 
 #### Step 2: Run the Jupyter Notebook

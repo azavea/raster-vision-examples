@@ -30,15 +30,15 @@ class SpacenetVegasSimpleSegmentation(rv.ExperimentSet):
         """
         # Specify the location of the raw data
         base_uri = join(
-            raw_uri, 'SpaceNet_Buildings_Dataset_Round2/spacenetV2_Train/AOI_2_Vegas')
+            raw_uri, 'spacenet/SN2_buildings/train/AOI_2_Vegas')
         # The images and labels are in two separate directories within the base_uri
-        raster_uri = join(base_uri, 'RGB-PanSharpen')
-        label_uri = join(base_uri, 'geojson/buildings')
+        raster_uri = join(base_uri, 'PS-RGB')
+        label_uri = join(base_uri, 'geojson_buildings')
         # The tiff (raster) and geojson (label) files have have a naming convention of
         # '[prefix]_[image id].geojson.' The prefix indicates the type of data and the
         # image id indicates which scene each is associated with.
-        raster_fn_prefix = 'RGB-PanSharpen_AOI_2_Vegas_img'
-        label_fn_prefix = 'buildings_AOI_2_Vegas_img'
+        raster_fn_prefix = 'SN2_buildings_train_AOI_2_Vegas_PS-RGB_img'
+        label_fn_prefix = 'SN2_buildings_train_AOI_2_Vegas_geojson_buildings_img'
         # Find all of the image ids that have associated images and labels. Collect
         # these values to use as our scene ids.
         label_paths = list_paths(label_uri, ext='.geojson')
