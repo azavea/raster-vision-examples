@@ -37,6 +37,7 @@ cfg = [
             'raw_uri': 's3://raster-vision-raw-data/isprs-potsdam',
             'processed_uri': 's3://raster-vision-lf-dev/examples/cowc-potsdam/processed-data',
         },
+        'rv_profile': 'pytorch',
     },
     {
         'key': 'potsdam-semantic-segmentation-pytorch',
@@ -48,7 +49,8 @@ cfg = [
         'remote': {
             'raw_uri': 's3://raster-vision-raw-data/isprs-potsdam',
             'processed_uri': 's3://raster-vision-lf-dev/examples/potsdam/processed-data',
-        }
+        },
+        'rv_profile': 'pytorch',
     },
     {
         'key': 'potsdam-semantic-segmentation-tf',
@@ -75,6 +77,7 @@ cfg = [
             'raw_uri': 's3://spacenet-dataset/',
             'processed_uri': 's3://raster-vision-lf-dev/examples/spacenet/rio/processed-data',
         },
+        'rv_profile': 'pytorch',
     },
     {
         'key': 'spacenet-rio-chip-classification-tf',
@@ -102,7 +105,8 @@ cfg = [
             'processed_uri': 's3://raster-vision-lf-dev/examples/spacenet/vegas/processed-data',
         },
         'extra_args': [['target', 'buildings'],
-                       ['task_type', 'semantic_segmentation']]
+                       ['task_type', 'semantic_segmentation']],
+        'rv_profile': 'pytorch',
     },
     {
         'key': 'spacenet-vegas-roads-semantic-segmentation-pytorch',
@@ -116,7 +120,8 @@ cfg = [
             'processed_uri': 's3://raster-vision-lf-dev/examples/spacenet/vegas/processed-data',
         },
         'extra_args': [['target', 'roads'],
-                       ['task_type', 'semantic_segmentation']]
+                       ['task_type', 'semantic_segmentation']],
+        'rv_profile': 'pytorch',
     },
     {
         'key': 'xview-object-detection-tf',
@@ -140,7 +145,7 @@ def run_experiment(exp_cfg, root_uri, test=True, remote=False, commands=None):
     rv_profile = exp_cfg.get('rv_profile')
     if rv_profile is not None:
         cmd += ['-p', rv_profile]
-    cmd += ['run', 'aws_batch' if remote else 'local', '-e', exp_cfg['module']]
+    cmd += ['run', 'aws_batch' if remote else 'inprocess', '-e', exp_cfg['module']]
     cmd += ['-a', 'raw_uri', uris['raw_uri']]
     if 'processed_uri' in uris:
         cmd += ['-a', 'processed_uri', uris['processed_uri']]

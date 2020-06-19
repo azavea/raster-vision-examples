@@ -4,6 +4,7 @@ This repository contains examples of using Raster Vision on open datasets.
 
 Note: The `master` branch of this examples repo should be used in conjunction with the `master` branch (or `latest` Docker image tag) of [Raster Vision](https://github.com/azavea/raster-vision)
 which contains the latest changes. For versions of this examples repo that correspond to stable, released versions of Raster Vision, see:
+* [0.11](https://github.com/azavea/raster-vision-examples/tree/0.11)
 * [0.10](https://github.com/azavea/raster-vision-examples/tree/0.10)
 * [0.9](https://github.com/azavea/raster-vision-examples/tree/0.9)
 
@@ -110,7 +111,7 @@ The dataset is stored on AWS S3 at `s3://spacenet-dataset`. You will need an AWS
 
 Optional: to run this example with the data stored locally, first copy the data using something like the following inside the container.
 ```
-aws s3 sync s3://spacenet-dataset/AOI_1_Rio/ /opt/data/spacenet-dataset/AOI_1_Rio/
+aws s3 sync s3://spacenet-dataset/AOIs/AOI_1_Rio/ /opt/data/spacenet-dataset/AOIs/AOI_1_Rio/
 ```
 
 #### Step 2: Run the Jupyter Notebook
